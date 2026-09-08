@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      target: development
+    env_file:
+      - .env.test
+    environment:
+      NODE_ENV: test
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run test:e2e
+    depends_on:
+      - postgres
+
+  postgres:
+    env_file:
+      - .env.test
+    tmpfs:
+      - /var/lib/postgresql/data

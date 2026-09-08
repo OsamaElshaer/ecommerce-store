@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+    app:
+        build:
+            context: .
+        container_name: ecommerce_app
+        depends_on:
+            - postgres
+        networks:
+            - ecommerce_network
+
+    postgres:
+        image: postgres:16-alpine
+        container_name: ecommerce_postgres
+        restart: always
+        environment:
+            POSTGRES_USER: ${DB_USER}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+            POSTGRES_DB: ${DB_NAME}
+        networks:
+            - ecommerce_network
+
+networks:
+    ecommerce_network:
+        driver: bridge
