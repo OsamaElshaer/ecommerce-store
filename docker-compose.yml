@@ -14,10 +14,6 @@ services:
         image: postgres:16-alpine
         container_name: ecommerce_postgres
         restart: always
-        environment:
-            POSTGRES_USER: ${DB_USER}
-            POSTGRES_PASSWORD: ${DB_PASSWORD}
-            POSTGRES_DB: ${DB_NAME}
         networks:
             - ecommerce_network
 
