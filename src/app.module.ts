@@ -8,9 +8,6 @@ import { envValidationSchema } from './config/env.validation';
         ConfigModule.forRoot({
             isGlobal: true,
             validationSchema: envValidationSchema,
-            validationOptions: {
-                abortEarly: false, 
-            },
         }),
         TypeOrmModule.forRootAsync({
             inject: [ConfigService],
