@@ -1,16 +1,13 @@
 {
-  "$schema": "https://json.schemastore.org/nest-cli",
-  "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
-  "compilerOptions": {
-    "deleteOutDir": true,
-     "watchOptions": {
-      "watchFile": "poll",
-      "watchDirectory": "poll",
-      "fallbackPolling": "dynamicPriority",
-      "poll": 1000
+    "$schema": "https://json.schemastore.org/nest-cli",
+    "collection": "@nestjs/schematics",
+    "sourceRoot": "src",
+    "compilerOptions": {
+        "deleteOutDir": true,
+        "watchOptions": {
+            "watchFile": "poll",
+            "watchDirectory": "poll",
+            "poll": 1000
+        }
     }
-  }
 }
-
-

@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 
 services:
     app:
@@ -8,9 +8,11 @@ services:
             - .env.dev
         environment:
             NODE_ENV: development
+            CHOKIDAR_USEPOLLING: 'true'
+            WATCHPACK_POLLING: 'true'
         ports:
-            - "3000:3000"
-            - "9229:9229" 
+            - '3000:3000'
+            - '9229:9229'
         volumes:
             - .:/app
             - /app/node_modules
@@ -20,7 +22,7 @@ services:
         env_file:
             - .env.dev
         ports:
-            - "5432:5432" 
+            - '5432:5432'
         volumes:
             - postgres_dev_data:/var/lib/postgresql/data
 
