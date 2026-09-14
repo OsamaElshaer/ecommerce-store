@@ -10,6 +10,7 @@ services:
             NODE_ENV: development
             CHOKIDAR_USEPOLLING: 'true'
             WATCHPACK_POLLING: 'true'
+            WATCHPACK_POLLING_INTERVAL: 1000
         ports:
             - '3000:3000'
             - '9229:9229'
