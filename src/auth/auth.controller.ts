@@ -3,7 +3,14 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+    ApiOperation,
+    ApiResponse,
+    ApiTags,
+    ApiBearerAuth,
+} from '@nestjs/swagger';
+import { Get, Req, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -38,5 +45,15 @@ export class AuthController {
     })
     refresh(@Body() dto: RefreshTokenDto) {
         return this.authService.refreshToken(dto.refresh_token);
+    }
+
+    @Get('me')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Get the currently logged-in user' })
+    @ApiResponse({ status: 200, description: 'Current user data' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    getProfile(@Req() req: any) {
+        return req.user;
     }
 }
