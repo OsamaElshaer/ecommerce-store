@@ -8,12 +8,12 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { StringValue } from 'ms';
+import ms, { StringValue } from 'ms';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-
 import { ConfigService } from '@nestjs/config';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -77,10 +77,14 @@ export class AuthService {
             },
         );
 
-        // 2. Generate Refresh Token
+        // 2. Generate a random selector (non-secret, used for fast DB lookup)
+        const selector = randomBytes(16).toString('hex');
+
+        // 3. Generate Refresh Token — نضمّن الـ selector في الـ payload
         const refresh_token = this.jwtService.sign(
             {
                 sub: userId,
+                selector,
             },
             {
                 secret: this.configService.getOrThrow<string>(
@@ -92,22 +96,26 @@ export class AuthService {
             },
         );
 
-        // 3. Hash Refresh Token before storing it in DB
+        // 4. Hash Refresh Token before storing it in DB
         const token_hash = await bcrypt.hash(refresh_token, 10);
 
-        // 4. Calculate Refresh Token expiration
-        // هنا لازم تكون متوافقة مع JWT_REFRESH_EXPIRES_IN
-        const expires_at = new Date();
-        expires_at.setDate(expires_at.getDate() + 7);
+        // 5. Calculate Refresh Token expiration — مبني فعليًا على JWT_REFRESH_EXPIRES_IN
+        const refreshExpiresIn = this.configService.getOrThrow<StringValue>(
+            'JWT_REFRESH_EXPIRES_IN',
+        );
+        const expires_at = new Date(Date.now() + ms(refreshExpiresIn));
 
-        // 5. Store only the hash in DB
+        // 6. Store selector + hash in DB
         await this.refreshTokenRepository.save({
+            selector,
             token_hash,
-            user_id: userId,
+            user: {
+                id: userId,
+            },
             expires_at,
         });
 
-        // 6. Return tokens to client
+        // 7. Return tokens to client
         return {
             access_token,
             refresh_token,
@@ -118,17 +126,19 @@ export class AuthService {
             },
         };
     }
-
     async refreshToken(token: string) {
         // 1. Verify Refresh Token signature + expiration
-        let payload: { sub: string };
+        let payload: { sub: string; selector: string };
 
         try {
-            payload = this.jwtService.verify<{ sub: string }>(token, {
-                secret: this.configService.getOrThrow<string>(
-                    'JWT_REFRESH_SECRET',
-                ),
-            });
+            payload = this.jwtService.verify<{ sub: string; selector: string }>(
+                token,
+                {
+                    secret: this.configService.getOrThrow<string>(
+                        'JWT_REFRESH_SECRET',
+                    ),
+                },
+            );
         } catch {
             throw new UnauthorizedException('Invalid or expired refresh token');
         }
@@ -140,39 +150,49 @@ export class AuthService {
             throw new UnauthorizedException('User no longer exists');
         }
 
-        // 3. Get active refresh tokens for this user
-        const storedTokens = await this.refreshTokenRepository.find({
+        // 3. Find the exact stored token via selector (بحث مباشر، من غير loop)
+        const storedToken = await this.refreshTokenRepository.findOne({
             where: {
+                selector: payload.selector,
                 user: {
                     id: user.id,
                 },
-                is_revoked: false,
             },
         });
 
-        // 4. Compare the plain token with the stored hashes
-        let matchedToken: RefreshToken | null = null;
-
-        for (const stored of storedTokens) {
-            const isMatch = await bcrypt.compare(token, stored.token_hash);
-
-            if (isMatch) {
-                matchedToken = stored;
-                break;
-            }
-        }
-
-        // 5. Token doesn't exist or expired in DB
-        if (!matchedToken || matchedToken.expires_at.getTime() <= Date.now()) {
+        // 4. Token not found
+        if (!storedToken) {
             throw new UnauthorizedException('Invalid or expired refresh token');
         }
 
-        // 6. Revoke the old refresh token
-        matchedToken.is_revoked = true;
+        // 5. Reuse detection: لو التوكن ده كان متراجع قبل كده واستُخدم تاني،
+        // ده مؤشر سرقة — نلغي كل جلسات المستخدم فورًا
+        if (storedToken.is_revoked) {
+            await this.refreshTokenRepository.update(
+                { user: { id: user.id } },
+                { is_revoked: true },
+            );
+            throw new UnauthorizedException(
+                'Token reuse detected. All sessions revoked.',
+            );
+        }
 
-        await this.refreshTokenRepository.save(matchedToken);
+        // 6. Check expiration
+        if (storedToken.expires_at.getTime() <= Date.now()) {
+            throw new UnauthorizedException('Invalid or expired refresh token');
+        }
 
-        // 7. Generate new Access Token + Refresh Token
+        // 7. Verify the hash matches (تأكيد إضافي، مش بس الاعتماد على الـ selector)
+        const isMatch = await bcrypt.compare(token, storedToken.token_hash);
+        if (!isMatch) {
+            throw new UnauthorizedException('Invalid or expired refresh token');
+        }
+
+        // 8. Revoke the old refresh token (rotation)
+        storedToken.is_revoked = true;
+        await this.refreshTokenRepository.save(storedToken);
+
+        // 9. Generate new Access Token + Refresh Token
         return this.generateTokens(user.id, user.email, user.role);
     }
 }

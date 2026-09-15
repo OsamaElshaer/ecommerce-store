@@ -90,10 +90,10 @@ erDiagram
         decimal amount
         timestamp created_at
     }
-
     REFRESH_TOKEN {
         uuid id PK
         uuid user_id FK
+        string selector "unique"
         string token_hash
         boolean is_revoked "default false"
         timestamp expires_at
