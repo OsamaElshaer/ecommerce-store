@@ -16,16 +16,30 @@ As a **customer**, I want to create an account with my email and password, so th
   - Return a clear error if email already exists.
 
 ### US-02 — Login
+
 As a **customer**, I want to log in with my email and password, so that I can access my account.
-- **Acceptance Criteria:**
-  - Successful login returns an access token + refresh token.
-  - Invalid credentials return a generic error (no hint whether email or password is wrong).
+
+* **Acceptance Criteria:**
+
+  * Successful login returns an **access token** and a **refresh token**.
+  * The refresh token is stored securely as a **hash** in the database.
+  * The refresh token has an expiration time.
+  * Invalid credentials return a **generic authentication error** without revealing whether the email or password is incorrect.
+  * The returned access token can be used to access protected endpoints.
 
 ### US-03 — Refresh Session
-As a **logged-in user**, I want my session to refresh automatically, so that I don't get logged out unexpectedly.
-- **Acceptance Criteria:**
-  - Refresh token endpoint issues a new access token.
-  - Expired/invalid refresh token forces re-login.
+
+As a **logged-in user**, I want my session to be refreshed using my refresh token, so that I can continue using the application without logging in again.
+
+* **Acceptance Criteria:**
+
+  * A valid refresh token returns a **new access token** and a **new refresh token**.
+  * When a refresh token is successfully used, the old refresh token is **revoked** and can no longer be used.
+  * The new refresh token is stored securely as a **hash** in the database.
+  * An expired refresh token is rejected and requires the user to log in again.
+  * An invalid, revoked, or unknown refresh token is rejected and requires the user to log in again.
+  * A refresh token that has expired in the database is rejected.
+
 
 ### US-04 — Logout
 As a **logged-in user**, I want to log out, so that my session is securely ended.

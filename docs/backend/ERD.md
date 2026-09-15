@@ -13,6 +13,7 @@ erDiagram
     USER ||--o| CART : has
     USER ||--o{ ORDER : places
     USER ||--o{ ADDRESS : owns
+    USER ||--o{ REFRESH_TOKEN : has
     CART ||--o{ CART_ITEM : contains
     CART_ITEM }o--|| PRODUCT : references
     ORDER ||--o{ ORDER_ITEM : contains
@@ -23,7 +24,7 @@ erDiagram
     USER {
         uuid id PK
         string email UK
-        string password_hash
+        string password_hash "nullable - null for OAuth-only users"
         string full_name
         string role "customer | admin"
         timestamp created_at
@@ -87,6 +88,15 @@ erDiagram
         string status "pending | succeeded | failed"
         string transaction_ref
         decimal amount
+        timestamp created_at
+    }
+
+    REFRESH_TOKEN {
+        uuid id PK
+        uuid user_id FK
+        string token_hash
+        boolean is_revoked "default false"
+        timestamp expires_at
         timestamp created_at
     }
 ```

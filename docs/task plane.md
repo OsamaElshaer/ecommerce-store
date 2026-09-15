@@ -44,6 +44,7 @@ Task-by-task breakdown of every sprint. Check items off as you go. Order within 
 - [ ] `JwtStrategy`, `AuthGuard`
 - [ ] `RolesGuard` + `@Roles()` decorator
 - [ ] `POST /auth/refresh`, `POST /auth/logout`
+- [ ] Refresh token rotation, google strategy
 - [ ] Write e2e tests for register/login (happy path + duplicate email)
 
 **Frontend**
