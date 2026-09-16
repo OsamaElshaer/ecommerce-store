@@ -102,7 +102,7 @@ export class AuthService {
         // 2. Generate a random selector (non-secret, used for fast DB lookup)
         const selector = randomBytes(16).toString('hex');
 
-        // 3. Generate Refresh Token — نضمّن الـ selector في الـ payload
+        // 3. Generate Refresh Token 
         const refresh_token = this.jwtService.sign(
             {
                 sub: userId,
@@ -121,7 +121,7 @@ export class AuthService {
         // 4. Hash Refresh Token before storing it in DB
         const token_hash = await bcrypt.hash(refresh_token, 10);
 
-        // 5. Calculate Refresh Token expiration — مبني فعليًا على JWT_REFRESH_EXPIRES_IN
+        // 5. Calculate Refresh Token expiration - JWT_REFRESH_EXPIRES_IN
         const refreshExpiresIn = this.configService.getOrThrow<StringValue>(
             'JWT_REFRESH_EXPIRES_IN',
         );
@@ -180,7 +180,7 @@ export class AuthService {
             throw new UnauthorizedException('User no longer exists');
         }
 
-        // 3. Find the exact stored token via selector (بحث مباشر، من غير loop)
+        // 3. Find the exact stored token via selector 
         const storedToken = await this.refreshTokenRepository.findOne({
             where: {
                 selector: payload.selector,
@@ -199,8 +199,7 @@ export class AuthService {
             throw new UnauthorizedException('Invalid or expired refresh token');
         }
 
-        // 5. Reuse detection: لو التوكن ده كان متراجع قبل كده واستُخدم تاني،
-        // ده مؤشر سرقة — نلغي كل جلسات المستخدم فورًا
+        // 5. Reuse detection،
         if (storedToken.is_revoked) {
             await this.refreshTokenRepository.update(
                 { user: { id: user.id } },
@@ -226,7 +225,7 @@ export class AuthService {
             throw new UnauthorizedException('Invalid or expired refresh token');
         }
 
-        // 7. Verify the hash matches (تأكيد إضافي، مش بس الاعتماد على الـ selector)
+        // 7. Verify the hash matches (selector)
         const isMatch = await bcrypt.compare(token, storedToken.token_hash);
         if (!isMatch) {
             this.logger.warn(
@@ -247,5 +246,28 @@ export class AuthService {
 
         // 9. Generate new Access Token + Refresh Token
         return this.generateTokens(user.id, user.email, user.role);
+    }
+
+    async logout(userId: string, token: string) {
+        let payload: { selector: string };
+
+        try {
+            payload = this.jwtService.verify<{ selector: string }>(token, {
+                secret: this.configService.getOrThrow<string>(
+                    'JWT_REFRESH_SECRET',
+                ),
+            });
+        } catch {
+            return { message: 'Logged out' };
+        }
+
+        await this.refreshTokenRepository.update(
+            { user: { id: userId }, selector: payload.selector },
+            { is_revoked: true },
+        );
+
+        this.logger.info({ type: 'app', userId }, 'User logged out');
+
+        return { message: 'Logged out' };
     }
 }
