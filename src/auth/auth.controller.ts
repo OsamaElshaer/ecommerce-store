@@ -11,6 +11,7 @@ import {
 } from '@nestjs/swagger';
 import { Get, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { LogoutDto } from './dto/logout.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -46,7 +47,20 @@ export class AuthController {
     refresh(@Body() dto: RefreshTokenDto) {
         return this.authService.refreshToken(dto.refresh_token);
     }
+    @Post('logout')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: "Log out (revoke the current session's refresh token)",
+    })
+    @ApiResponse({ status: 200, description: 'Logged out successfully' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    logout(@Req() req: any, @Body() dto: LogoutDto) {
+        return this.authService.logout(req.user.id, dto.refresh_token);
+    }
 
+    
     @Get('me')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()

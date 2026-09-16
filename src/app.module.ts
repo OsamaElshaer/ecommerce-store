@@ -6,6 +6,7 @@ import { HealthModule } from './health/health.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { LoggerModule } from 'nestjs-pino';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
     imports: [
@@ -55,6 +56,8 @@ import { LoggerModule } from 'nestjs-pino';
                 synchronize: config.get<string>('NODE_ENV') === 'development',
             }),
         }),
+        ScheduleModule.forRoot(),
+
         HealthModule,
         UsersModule,
         AuthModule,
