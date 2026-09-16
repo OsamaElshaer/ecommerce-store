@@ -14,6 +14,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class AuthService {
@@ -23,11 +24,17 @@ export class AuthService {
         private readonly jwtService: JwtService,
         @InjectRepository(RefreshToken)
         private readonly refreshTokenRepository: Repository<RefreshToken>,
+        @InjectPinoLogger(AuthService.name)
+        private readonly logger: PinoLogger,
     ) {}
 
     async register(dto: RegisterDto) {
         const existing = await this.usersService.findByEmail(dto.email);
         if (existing) {
+            this.logger.warn(
+                { type: 'app', email: dto.email },
+                'Registration attempt with existing email',
+            );
             throw new ConflictException('Email already exists');
         }
 
@@ -37,6 +44,11 @@ export class AuthService {
             password_hash,
             full_name: dto.full_name,
         });
+
+        this.logger.info(
+            { type: 'app', userId: user.id },
+            'New user registered',
+        );
 
         return {
             id: user.id,
@@ -49,13 +61,23 @@ export class AuthService {
     async login(dto: LoginDto) {
         const user = await this.usersService.findByEmail(dto.email);
         if (!user) {
+            this.logger.warn(
+                { type: 'app', email: dto.email },
+                'Failed login attempt — email not found',
+            );
             throw new UnauthorizedException('Invalid credentials');
         }
 
         const isMatch = await bcrypt.compare(dto.password, user.password_hash);
         if (!isMatch) {
+            this.logger.warn(
+                { type: 'app', userId: user.id },
+                'Failed login attempt — wrong password',
+            );
             throw new UnauthorizedException('Invalid credentials');
         }
+
+        this.logger.info({ type: 'app', userId: user.id }, 'User logged in');
 
         return this.generateTokens(user.id, user.email, user.role);
     }
@@ -140,6 +162,10 @@ export class AuthService {
                 },
             );
         } catch {
+            this.logger.warn(
+                { type: 'app', reason: 'invalid_signature_or_expired_jwt' },
+                'Refresh token rejected',
+            );
             throw new UnauthorizedException('Invalid or expired refresh token');
         }
 
@@ -147,6 +173,10 @@ export class AuthService {
         const user = await this.usersService.findById(payload.sub);
 
         if (!user) {
+            this.logger.warn(
+                { type: 'app', userId: payload.sub },
+                'Refresh token rejected — user no longer exists',
+            );
             throw new UnauthorizedException('User no longer exists');
         }
 
@@ -162,6 +192,10 @@ export class AuthService {
 
         // 4. Token not found
         if (!storedToken) {
+            this.logger.warn(
+                { type: 'app', userId: user.id, reason: 'unknown_selector' },
+                'Refresh token rejected',
+            );
             throw new UnauthorizedException('Invalid or expired refresh token');
         }
 
@@ -172,6 +206,12 @@ export class AuthService {
                 { user: { id: user.id } },
                 { is_revoked: true },
             );
+
+            this.logger.warn(
+                { type: 'app', userId: user.id, selector: payload.selector },
+                'Refresh token reuse detected — all sessions revoked',
+            );
+
             throw new UnauthorizedException(
                 'Token reuse detected. All sessions revoked.',
             );
@@ -179,18 +219,31 @@ export class AuthService {
 
         // 6. Check expiration
         if (storedToken.expires_at.getTime() <= Date.now()) {
+            this.logger.warn(
+                { type: 'app', userId: user.id, reason: 'expired_in_db' },
+                'Refresh token rejected',
+            );
             throw new UnauthorizedException('Invalid or expired refresh token');
         }
 
         // 7. Verify the hash matches (تأكيد إضافي، مش بس الاعتماد على الـ selector)
         const isMatch = await bcrypt.compare(token, storedToken.token_hash);
         if (!isMatch) {
+            this.logger.warn(
+                { type: 'app', userId: user.id, reason: 'hash_mismatch' },
+                'Refresh token rejected',
+            );
             throw new UnauthorizedException('Invalid or expired refresh token');
         }
 
         // 8. Revoke the old refresh token (rotation)
         storedToken.is_revoked = true;
         await this.refreshTokenRepository.save(storedToken);
+
+        this.logger.info(
+            { type: 'app', userId: user.id },
+            'Refresh token rotated',
+        );
 
         // 9. Generate new Access Token + Refresh Token
         return this.generateTokens(user.id, user.email, user.role);

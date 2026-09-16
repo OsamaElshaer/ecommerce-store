@@ -16,6 +16,7 @@ Task-by-task breakdown of every sprint. Check items off as you go. Order within 
 - [ ] Set up `@nestjs/config` with startup validation (fail fast if a required var is missing)
 - [ ] Set up global `ValidationPipe`, `HttpExceptionFilter`
 - [ ] Set up Swagger at `/api/docs`
+- [ ] Setup structured logging with Pino (`nestjs-pino`) for HTTP and application logs
 - [ ] Create a `GET /health` route, confirm it responds
 
 **Frontend**

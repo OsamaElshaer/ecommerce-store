@@ -94,7 +94,8 @@ An e-commerce store selling products from a **single category**. Customers can b
 - **Security:** Password hashing (bcrypt), SQL Injection protection via ORM (TypeORM/Prisma), rate limiting on sensitive APIs
 - **Performance:** Pagination for large lists, optional caching for product pages
 - **Scalability:** Modular Nest.js architecture to allow easy addition of new features
-- **UX:** Fully responsive UI via Next.js
+- **UX:** Fully responsive UI via Next.j
+- **Logging:** Structured application and HTTP logging with sensitive data redaction.
 
 ---
 

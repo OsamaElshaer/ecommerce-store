@@ -5,9 +5,38 @@ import { envValidationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
     imports: [
+        LoggerModule.forRoot({
+            pinoHttp: {
+                transport:
+                    process.env.NODE_ENV !== 'production'
+                        ? {
+                              target: 'pino-pretty',
+                              options: {
+                                  colorize: true,
+                              },
+                          }
+                        : undefined,
+
+                level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
+
+                customProps: () => ({
+                    type: 'http',
+                }),
+
+                redact: {
+                    paths: [
+                        'req.headers.authorization',
+                        'req.body.password',
+                        'req.body.refresh_token',
+                    ],
+                    censor: '[REDACTED]',
+                },
+            },
+        }),
         ConfigModule.forRoot({
             isGlobal: true,
             validationSchema: envValidationSchema,
