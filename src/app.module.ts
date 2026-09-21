@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { LoggerModule } from 'nestjs-pino';
 import { ScheduleModule } from '@nestjs/schedule';
+import { MailModule } from './mail/mail.module';
 
 @Module({
     imports: [
@@ -61,6 +62,7 @@ import { ScheduleModule } from '@nestjs/schedule';
         HealthModule,
         UsersModule,
         AuthModule,
+        MailModule,
     ],
     controllers: [],
     providers: [],
