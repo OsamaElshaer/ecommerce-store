@@ -22,4 +22,7 @@ export class UsersService {
     findById(id: string): Promise<User | null> {
         return this.usersRepository.findOne({ where: { id } });
     }
+    async update(userId: string, data: Partial<User>) {
+        return this.usersRepository.update({ id: userId }, data);
+    }
 }

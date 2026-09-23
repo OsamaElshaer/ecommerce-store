@@ -14,6 +14,7 @@ erDiagram
     USER ||--o{ ORDER : places
     USER ||--o{ ADDRESS : owns
     USER ||--o{ REFRESH_TOKEN : has
+    USER ||--o{ PASSWORD_RESET_TOKEN : has
     CART ||--o{ CART_ITEM : contains
     CART_ITEM }o--|| PRODUCT : references
     ORDER ||--o{ ORDER_ITEM : contains
@@ -99,6 +100,15 @@ erDiagram
         timestamp expires_at
         timestamp created_at
     }
+    PASSWORD_RESET_TOKEN {
+    uuid id PK
+    uuid user_id FK
+    string selector "unique"
+    string token_hash
+    boolean is_revoked "default false"
+    timestamp expires_at
+    timestamp created_at
+}
 ```
 
 ---

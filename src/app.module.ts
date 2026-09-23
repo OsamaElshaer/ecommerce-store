@@ -13,6 +13,8 @@ import { MailModule } from './mail/mail.module';
     imports: [
         LoggerModule.forRoot({
             pinoHttp: {
+                autoLogging: false,
+                quietReqLogger: true,
                 transport:
                     process.env.NODE_ENV !== 'production'
                         ? {
@@ -34,6 +36,7 @@ import { MailModule } from './mail/mail.module';
                         'req.headers.authorization',
                         'req.body.password',
                         'req.body.refresh_token',
+                        'req.headers.cookie',
                     ],
                     censor: '[REDACTED]',
                 },

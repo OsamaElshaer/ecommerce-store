@@ -21,7 +21,8 @@ export const envValidationSchema = Joi.object({
     GOOGLE_CLIENT_SECRET: Joi.string().required(),
     GOOGLE_CALLBACK_URL: Joi.string().required(),
 
+    MAIL_USER: Joi.string().required(),
+    MAIL_PASSWORD: Joi.string().required(),
 
-    MAIL_FROM: Joi.string().required(),
-    RESEND_API_KEY: Joi.string().required(),
+    FRONTEND_URL: Joi.string().required(),
 });
