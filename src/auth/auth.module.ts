@@ -8,13 +8,14 @@ import { PassportModule } from '@nestjs/passport';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshTokenCleanupService } from './refresh-token-cleanup.service';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
 
 @Module({
     imports: [
         UsersModule,
         JwtModule.register({}),
         PassportModule,
-        TypeOrmModule.forFeature([RefreshToken]),
+        TypeOrmModule.forFeature([RefreshToken, PasswordResetToken]),
     ],
     controllers: [AuthController],
     providers: [AuthService, JwtStrategy, RefreshTokenCleanupService],

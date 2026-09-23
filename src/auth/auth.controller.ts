@@ -12,6 +12,8 @@ import {
 import { Get, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { LogoutDto } from './dto/logout.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -60,7 +62,34 @@ export class AuthController {
         return this.authService.logout(req.user.id, dto.refresh_token);
     }
 
-    
+    @Post('forgot-password')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Request a password reset email' })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description:
+            'Returns a generic message whether or not the email exists.',
+    })
+    forgotPassword(@Body() dto: ForgotPasswordDto) {
+        return this.authService.forgotPassword(dto.email);
+    }
+
+    @Post('reset-password')
+    @HttpCode(HttpStatus.OK)
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'Password has been reset successfully.',
+    })
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: 'Invalid, expired, or already used reset token.',
+    })
+    @ApiOperation({ summary: "Reset the user's password" })
+    resetPassword(@Body() dto: ResetPasswordDto) {
+        return this.authService.resetPassword(dto.token, dto.new_password);
+    }
+
+
     @Get('me')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
