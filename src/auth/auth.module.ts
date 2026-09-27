@@ -10,13 +10,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshTokenCleanupService } from './refresh-token-cleanup.service';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { PasswordResetTokenCleanupService } from './password-reset-token-cleanup.service';
+import { EmailVerificationToken } from './entities/email-verification-token.entity';
 
 @Module({
     imports: [
         UsersModule,
         JwtModule.register({}),
         PassportModule,
-        TypeOrmModule.forFeature([RefreshToken, PasswordResetToken]),
+        TypeOrmModule.forFeature([RefreshToken, PasswordResetToken, EmailVerificationToken]),
     ],
     controllers: [AuthController],
     providers: [

@@ -19,6 +19,8 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { MailService } from '../mail/mail.service';
 import { resetPasswordTemplate } from '../mail/templates/reset-password.template';
+import { EmailVerificationToken } from './entities/email-verification-token.entity';
+import { emailVerificationTemplate } from '../mail/templates/email-verification.template';
 
 @Injectable()
 export class AuthService {
@@ -33,28 +35,62 @@ export class AuthService {
         private readonly mailService: MailService,
         @InjectRepository(PasswordResetToken)
         private readonly passwordResetTokenRepository: Repository<PasswordResetToken>,
+        @InjectRepository(EmailVerificationToken)
+        private readonly emailVerificationTokenRepository: Repository<EmailVerificationToken>,
     ) {}
 
     async register(dto: RegisterDto) {
         const existing = await this.usersService.findByEmail(dto.email);
+
         if (existing) {
             this.logger.warn(
                 { type: 'app', email: dto.email },
                 'Registration attempt with existing email',
             );
+
             throw new ConflictException('Email already exists');
         }
 
         const password_hash = await bcrypt.hash(dto.password, 10);
+
         const user = await this.usersService.create({
             email: dto.email,
             password_hash,
             full_name: dto.full_name,
         });
 
+        const selector = randomBytes(16).toString('hex');
+        const rawToken = randomBytes(32).toString('hex');
+
+        const token_hash = await bcrypt.hash(rawToken, 10);
+
+        const expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        await this.emailVerificationTokenRepository.save({
+            selector,
+            token_hash,
+            user: { id: user.id },
+            expires_at,
+        });
+
+        const verificationToken = `${selector}.${rawToken}`;
+
+        const verificationUrl = `${this.configService.getOrThrow<string>(
+            'FRONTEND_URL',
+        )}/verify-email?token=${verificationToken}`;
+
+        await this.mailService.sendEmail({
+            to: user.email,
+            subject: 'Verify your email',
+            html: emailVerificationTemplate({
+                name: user.full_name,
+                verificationUrl,
+            }),
+        });
+
         this.logger.info(
             { type: 'app', userId: user.id },
-            'New user registered',
+            'New user registered — verification email sent',
         );
 
         return {
@@ -67,6 +103,7 @@ export class AuthService {
 
     async login(dto: LoginDto) {
         const user = await this.usersService.findByEmail(dto.email);
+
         if (!user) {
             this.logger.warn(
                 { type: 'app', email: dto.email },
@@ -75,13 +112,31 @@ export class AuthService {
             throw new UnauthorizedException('Invalid credentials');
         }
 
+        if (!user.password_hash) {
+            this.logger.warn(
+                { type: 'app', userId: user.id },
+                'Password login attempt for account without password',
+            );
+
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
         const isMatch = await bcrypt.compare(dto.password, user.password_hash);
+
         if (!isMatch) {
             this.logger.warn(
                 { type: 'app', userId: user.id },
                 'Failed login attempt — wrong password',
             );
             throw new UnauthorizedException('Invalid credentials');
+        }
+
+        if (!user.is_verified) {
+            this.logger.warn(
+                { type: 'app', userId: user.id },
+                'Login attempt — email not verified',
+            );
+            throw new UnauthorizedException('Please verify your email first');
         }
 
         this.logger.info({ type: 'app', userId: user.id }, 'User logged in');
@@ -364,6 +419,61 @@ export class AuthService {
 
         return {
             message: 'Password reset successfully',
+        };
+    }
+    async verifyEmail(token: string) {
+        const [selector, rawToken] = token.split('.');
+
+        if (!selector || !rawToken) {
+            throw new BadRequestException('Invalid verification token');
+        }
+
+        const verificationToken =
+            await this.emailVerificationTokenRepository.findOne({
+                where: { selector },
+                relations: {
+                    user: true,
+                },
+            });
+
+        if (!verificationToken) {
+            throw new BadRequestException('Invalid verification token');
+        }
+
+        if (verificationToken.used) {
+            throw new BadRequestException(
+                'Verification token has already been used',
+            );
+        }
+
+        if (verificationToken.expires_at < new Date()) {
+            throw new BadRequestException('Verification token has expired');
+        }
+
+        const isValid = await bcrypt.compare(
+            rawToken,
+            verificationToken.token_hash,
+        );
+
+        if (!isValid) {
+            throw new BadRequestException('Invalid verification token');
+        }
+
+        await this.usersService.update(verificationToken.user.id, {
+            is_verified: true,
+        });
+
+        verificationToken.used = true;
+
+        await this.emailVerificationTokenRepository.save(verificationToken);
+
+        this.logger.info(
+            { type: 'app', userId: verificationToken.user.id },
+            'Email verified successfully',
+        );
+
+        return {
+            message: 'Email verified successfully',
         };
     }
 }

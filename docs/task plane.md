@@ -45,8 +45,15 @@ Task-by-task breakdown of every sprint. Check items off as you go. Order within 
 - [ ] `JwtStrategy`, `AuthGuard`
 - [ ] `RolesGuard` + `@Roles()` decorator
 - [ ] `POST /auth/refresh`, `POST /auth/logout`
-- [ ] Refresh token rotation, google strategy
-- [ ] Write e2e tests for register/login (happy path + duplicate email)
+- [ ] Refresh token rotation (with reuse detection + selector-based lookup)
+- [ ] Refresh token cleanup cron job (@nestjs/schedule, deletes expired rows daily)
+- [ ] Structured logging (nestjs-pino) — request logging + manual auth event logs (register/login/refresh/logout)
+- [ ] Dev-only real error messages in global HttpExceptionFilter (safe fallback in production)
+- [ ] Forgot/Reset Password infrastructure — PasswordResetToken entity, MailModule (Gmail SMTP), email template, `forgotPassword()` service logic
+- [ ] `resetPassword()` service logic + `POST /auth/reset-password` endpoint 
+- [ ] `POST /auth/forgot-password` endpoint (DTO/service done, endpoint itself not yet added to controller)
+- [ ] Google Strategy (`password_hash` nullable + login() null-check pending, GoogleStrategy class + `/auth/google` + `/auth/google/callback` endpoints not started)
+- [ ] Write e2e tests for register/login (happy path + duplicate email) — paused, test DB strategy undecided
 
 **Frontend**
 

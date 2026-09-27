@@ -9,7 +9,10 @@ export enum UserRole {
     CUSTOMER = 'customer',
     ADMIN = 'admin',
 }
-
+export enum AuthProvider {
+    LOCAL = 'local',
+    GOOGLE = 'google',
+}
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn('uuid')
@@ -18,9 +21,9 @@ export class User {
     @Column({ unique: true })
     email!: string;
 
-    @Column()
-    password_hash!: string;
-
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    password_hash!: string | null;
+    
     @Column()
     full_name!: string;
 
@@ -30,6 +33,16 @@ export class User {
         default: UserRole.CUSTOMER,
     })
     role!: UserRole;
+
+    @Column({
+        type: 'enum',
+        enum: AuthProvider,
+        default: AuthProvider.LOCAL,
+    })
+    auth_provider!: AuthProvider;
+
+    @Column({ default: false })
+    is_verified!: boolean;
 
     @CreateDateColumn()
     created_at!: Date;

@@ -1,4 +1,14 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Post,
+    Query,
+    Req,
+    UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -9,7 +19,6 @@ import {
     ApiTags,
     ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Get, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { LogoutDto } from './dto/logout.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -28,7 +37,21 @@ export class AuthController {
     register(@Body() dto: RegisterDto) {
         return this.authService.register(dto);
     }
-
+    @Get('verify-email')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Verify the user email address' })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'Email verified successfully.',
+    })
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: 'Invalid, expired, or already used verification token.',
+    })
+    verifyEmail(@Query('token') token: string) {
+        return this.authService.verifyEmail(token);
+    }
+    
     @Post('login')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Log in and receive access + refresh tokens' })
@@ -88,7 +111,6 @@ export class AuthController {
     resetPassword(@Body() dto: ResetPasswordDto) {
         return this.authService.resetPassword(dto.token, dto.new_password);
     }
-
 
     @Get('me')
     @UseGuards(JwtAuthGuard)

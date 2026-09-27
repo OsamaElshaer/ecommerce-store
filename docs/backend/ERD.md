@@ -15,6 +15,7 @@ erDiagram
     USER ||--o{ ADDRESS : owns
     USER ||--o{ REFRESH_TOKEN : has
     USER ||--o{ PASSWORD_RESET_TOKEN : has
+    USER ||--o{ EMAIL_VERIFICATION_TOKEN : has
     CART ||--o{ CART_ITEM : contains
     CART_ITEM }o--|| PRODUCT : references
     ORDER ||--o{ ORDER_ITEM : contains
@@ -28,6 +29,8 @@ erDiagram
         string password_hash "nullable - null for OAuth-only users"
         string full_name
         string role "customer | admin"
+        string auth_provider "local | google"
+        boolean is_verified "default: false"
         timestamp created_at
     }
 
@@ -106,6 +109,15 @@ erDiagram
     string selector "unique"
     string token_hash
     boolean is_revoked "default false"
+    timestamp expires_at
+    timestamp created_at
+}
+EMAIL_VERIFICATION_TOKEN {
+    uuid id PK
+    string selector UK
+    string token_hash
+    uuid user_id FK
+    boolean used
     timestamp expires_at
     timestamp created_at
 }
