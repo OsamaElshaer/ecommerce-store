@@ -9,6 +9,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshTokenCleanupService } from './refresh-token-cleanup.service';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { PasswordResetTokenCleanupService } from './password-reset-token-cleanup.service';
 
 @Module({
     imports: [
@@ -18,6 +19,11 @@ import { PasswordResetToken } from './entities/password-reset-token.entity';
         TypeOrmModule.forFeature([RefreshToken, PasswordResetToken]),
     ],
     controllers: [AuthController],
-    providers: [AuthService, JwtStrategy, RefreshTokenCleanupService],
+    providers: [
+        AuthService,
+        JwtStrategy,
+        RefreshTokenCleanupService,
+        PasswordResetTokenCleanupService,
+    ],
 })
 export class AuthModule {}

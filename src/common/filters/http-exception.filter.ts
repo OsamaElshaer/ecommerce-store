@@ -18,12 +18,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
             exception instanceof HttpException
                 ? exception.getStatus()
                 : HttpStatus.INTERNAL_SERVER_ERROR;
+        const isDev = process.env.NODE_ENV !== 'production';
 
         const message =
             exception instanceof HttpException
                 ? exception.getResponse()
-                : 'Internal server error';
-
+                : isDev && exception instanceof Error
+                  ? exception.message
+                  : 'Internal server error';
         response.status(status).json({
             statusCode: status,
             timestamp: new Date().toISOString(),
