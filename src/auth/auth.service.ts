@@ -21,6 +21,7 @@ import { MailService } from '../mail/mail.service';
 import { resetPasswordTemplate } from '../mail/templates/reset-password.template';
 import { EmailVerificationToken } from './entities/email-verification-token.entity';
 import { emailVerificationTemplate } from '../mail/templates/email-verification.template';
+import { AuthProvider, UserRole } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -115,7 +116,7 @@ export class AuthService {
         if (!user.password_hash) {
             this.logger.warn(
                 { type: 'app', userId: user.id },
-                'Password login attempt for account without password',
+                'This account was created with Google. Please use Google login or set a password first.',
             );
 
             throw new UnauthorizedException('Invalid credentials');
@@ -533,5 +534,56 @@ export class AuthService {
         );
 
         return genericMessage;
+    }
+    async googleLogin(profile: { email: string; fullName: string }) {
+        const user = await this.usersService.findByEmail(profile.email);
+
+        // Existing user
+        if (user) {
+            if (user.auth_provider !== AuthProvider.GOOGLE) {
+                this.logger.warn(
+                    {
+                        type: 'app',
+                        email: profile.email,
+                        userId: user.id,
+                    },
+                    'Google login rejected — local account exists',
+                );
+
+                throw new UnauthorizedException(
+                    'An account with this email already exists. Please log in with your password.',
+                );
+            }
+
+            this.logger.info(
+                {
+                    type: 'app',
+                    userId: user.id,
+                },
+                'User logged in with Google',
+            );
+
+            return this.generateTokens(user.id, user.email, user.role);
+        }
+
+        // New Google user
+        const newUser = await this.usersService.create({
+            email: profile.email,
+            full_name: profile.fullName,
+            password_hash: null,
+            role: UserRole.CUSTOMER,
+            auth_provider: AuthProvider.GOOGLE,
+            is_verified: true,
+        });
+
+        this.logger.info(
+            {
+                type: 'app',
+                userId: newUser.id,
+            },
+            'User registered with Google',
+        );
+
+        return this.generateTokens(newUser.id, newUser.email, newUser.role);
     }
 }

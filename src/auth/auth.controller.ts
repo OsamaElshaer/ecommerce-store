@@ -24,6 +24,7 @@ import { LogoutDto } from './dto/logout.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -123,5 +124,16 @@ export class AuthController {
     })
     resendVerification(@Body() dto: ResendVerificationDto) {
         return this.authService.resendVerification(dto.email);
+    }
+    @Get('google')
+    @UseGuards(AuthGuard('google'))
+    @ApiOperation({ summary: 'Start Google OAuth login' })
+    googleAuth() {}
+
+    @Get('google/callback')
+    @UseGuards(AuthGuard('google'))
+    @ApiOperation({ summary: 'Handle Google OAuth callback' })
+    googleCallback(@Req() req: any) {
+        return this.authService.googleLogin(req.user);
     }
 }

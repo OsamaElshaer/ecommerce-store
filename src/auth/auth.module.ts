@@ -11,6 +11,7 @@ import { RefreshTokenCleanupService } from './refresh-token-cleanup.service';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { PasswordResetTokenCleanupService } from './password-reset-token-cleanup.service';
 import { EmailVerificationToken } from './entities/email-verification-token.entity';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
     imports: [
@@ -25,6 +26,7 @@ import { EmailVerificationToken } from './entities/email-verification-token.enti
         JwtStrategy,
         RefreshTokenCleanupService,
         PasswordResetTokenCleanupService,
+        GoogleStrategy,
     ],
 })
 export class AuthModule {}
