@@ -476,4 +476,62 @@ export class AuthService {
             message: 'Email verified successfully',
         };
     }
+    async resendVerification(email: string) {
+        const user = await this.usersService.findByEmail(email);
+
+        const genericMessage = {
+            message:
+                'If an account with this email exists, a verification email has been sent.',
+        };
+
+        if (!user || user.is_verified) {
+            return genericMessage;
+        }
+
+        await this.emailVerificationTokenRepository.update(
+            {
+                user: { id: user.id },
+                used: false,
+            },
+            {
+                used: true,
+            },
+        );
+
+        const selector = randomBytes(16).toString('hex');
+        const rawToken = randomBytes(32).toString('hex');
+
+        const token_hash = await bcrypt.hash(rawToken, 10);
+
+        const expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        await this.emailVerificationTokenRepository.save({
+            selector,
+            token_hash,
+            user: { id: user.id },
+            expires_at,
+        });
+
+        const verificationToken = `${selector}.${rawToken}`;
+
+        const verificationUrl = `${this.configService.getOrThrow<string>(
+            'FRONTEND_URL',
+        )}/verify-email?token=${verificationToken}`;
+
+        await this.mailService.sendEmail({
+            to: user.email,
+            subject: 'Verify your email',
+            html: emailVerificationTemplate({
+                name: user.full_name,
+                verificationUrl,
+            }),
+        });
+
+        this.logger.info(
+            { type: 'app', userId: user.id },
+            'Verification email resent',
+        );
+
+        return genericMessage;
+    }
 }

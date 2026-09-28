@@ -23,6 +23,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { LogoutDto } from './dto/logout.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -37,6 +38,7 @@ export class AuthController {
     register(@Body() dto: RegisterDto) {
         return this.authService.register(dto);
     }
+
     @Get('verify-email')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Verify the user email address' })
@@ -51,7 +53,7 @@ export class AuthController {
     verifyEmail(@Query('token') token: string) {
         return this.authService.verifyEmail(token);
     }
-    
+
     @Post('login')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Log in and receive access + refresh tokens' })
@@ -112,13 +114,14 @@ export class AuthController {
         return this.authService.resetPassword(dto.token, dto.new_password);
     }
 
-    @Get('me')
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
-    @ApiOperation({ summary: 'Get the currently logged-in user' })
-    @ApiResponse({ status: 200, description: 'Current user data' })
-    @ApiResponse({ status: 401, description: 'Unauthorized' })
-    getProfile(@Req() req: any) {
-        return req.user;
+    @Post('resend-verification')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Resend the email verification link' })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'Verification email resend request processed.',
+    })
+    resendVerification(@Body() dto: ResendVerificationDto) {
+        return this.authService.resendVerification(dto.email);
     }
 }
