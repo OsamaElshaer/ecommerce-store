@@ -1,11 +1,3 @@
-# Entity Relationship Diagram (ERD)
-
-## E-commerce Store — Nest.js (Backend) + Next.js (Frontend)
-
-Based on the PRD and User Stories: single product category, Customer + Admin roles, cart persisted per user, checkout via a real payment gateway (test mode).
-
----
-
 ## 1. Diagram
 
 ```mermaid
@@ -22,6 +14,7 @@ erDiagram
     ORDER_ITEM }o--|| PRODUCT : references
     ORDER ||--|| PAYMENT : has
     ORDER }o--|| ADDRESS : "ships to"
+    PRODUCT ||--o{ PRODUCT_IMAGE : has
 
     USER {
         uuid id PK
@@ -50,8 +43,16 @@ erDiagram
         text description
         decimal price
         int stock
-        string image_url
         boolean is_active
+        timestamp created_at
+    }
+
+    PRODUCT_IMAGE {
+        uuid id PK
+        uuid product_id FK
+        string image_url
+        boolean is_primary "default: false"
+        int position "default: 0"
         timestamp created_at
     }
 
@@ -127,16 +128,17 @@ EMAIL_VERIFICATION_TOKEN {
 
 ## 2. Entities Overview
 
-| Entity        | Purpose                                                                                                           |
-| ------------- | ----------------------------------------------------------------------------------------------------------------- |
-| **User**      | Customers and Admins (differentiated by `role`)                                                                   |
-| **Address**   | Shipping addresses linked to a user                                                                               |
-| **Product**   | Store items (single category, so no separate Category table needed)                                               |
-| **Cart**      | One active cart per user                                                                                          |
-| **CartItem**  | Products inside a user's cart, with quantity                                                                      |
-| **Order**     | A confirmed purchase, snapshot of cart at checkout time                                                           |
-| **OrderItem** | Line items of an order, storing `unit_price` at time of purchase (so later price changes don't affect old orders) |
-| **Payment**   | Payment attempt/result tied to an order                                                                           |
+| Entity           | Purpose                                                                                                           |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **User**         | Customers and Admins (differentiated by `role`)                                                                   |
+| **Address**      | Shipping addresses linked to a user                                                                               |
+| **Product**      | Store items (single category, so no separate Category table needed)                                               |
+| **ProductImage** | One or more images per product, with a primary flag and display order                                             |
+| **Cart**         | One active cart per user                                                                                          |
+| **CartItem**     | Products inside a user's cart, with quantity                                                                      |
+| **Order**        | A confirmed purchase, snapshot of cart at checkout time                                                           |
+| **OrderItem**    | Line items of an order, storing `unit_price` at time of purchase (so later price changes don't affect old orders) |
+| **Payment**      | Payment attempt/result tied to an order                                                                           |
 
 ---
 
@@ -147,6 +149,7 @@ EMAIL_VERIFICATION_TOKEN {
 - **`Order` and `Payment` are one-to-one** — one payment attempt per order in this phase. If you later support retries, this can become one-to-many.
 - **No `Category` table** — since the store sells a single product category, this avoids unnecessary complexity for phase 1. Easy to add later if the store expands.
 - **`Address` is a separate table** (not embedded in `Order`) so users can save and reuse multiple addresses, while `Order.address_id` still snapshots which one was used.
+- **`ProductImage` is a separate table** (not a single `image_url` column on `Product`) so a product can have multiple images, with `is_primary` marking which one shows on listing cards and `position` controlling display order on the product details page. Deleting a product cascades to its images.
 
 ---
 
@@ -157,5 +160,5 @@ EMAIL_VERIFICATION_TOKEN {
 - One `User` → many `Order`
 - One `Cart` → many `CartItem`
 - One `Order` → many `OrderItem`
-- One `Order` → one `Payment`
+- One `Product` → many `ProductImage`
 - `CartItem` and `OrderItem` each reference one `Product`

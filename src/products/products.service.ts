@@ -3,12 +3,16 @@ import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { QueryProductsDto, ProductSort } from './dto/query-products.dto';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ProductImage } from './entities/product-image.entity';
+import { CreateProductDto } from './dto/create-product.dto';
 
 @Injectable()
 export class ProductsService {
     constructor(
         @InjectRepository(Product)
         private readonly productsRepository: Repository<Product>,
+        @InjectRepository(ProductImage)
+        private readonly productImagesRepository: Repository<ProductImage>,
     ) {}
 
     async findAll(query: QueryProductsDto) {
@@ -74,5 +78,27 @@ export class ProductsService {
         }
 
         return product;
+    }
+
+    async create(
+        dto: CreateProductDto,
+        file: Express.Multer.File,
+    ): Promise<Product> {
+        const product = this.productsRepository.create(dto);
+
+        const savedProduct = await this.productsRepository.save(product);
+
+        if (file) {
+            const image = this.productImagesRepository.create({
+                product_id: savedProduct.id,
+                image_url: `/uploads/products/${file.filename}`,
+                is_primary: true,
+                position: 0,
+            });
+
+            await this.productImagesRepository.save(image);
+        }
+
+        return this.findOne(savedProduct.id);
     }
 }

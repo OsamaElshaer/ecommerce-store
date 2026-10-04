@@ -8,9 +8,17 @@ import { AuthModule } from './auth/auth.module';
 import { LoggerModule } from 'nestjs-pino';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MailModule } from './mail/mail.module';
+import { ProductsModule } from './products/products.module';
+import { StorageModule } from './storage/storage.module';
+import { join } from 'path/win32';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 @Module({
     imports: [
+        ServeStaticModule.forRoot({
+            rootPath: join(process.cwd(), 'uploads'),
+            serveRoot: '/uploads',
+        }),
         LoggerModule.forRoot({
             pinoHttp: {
                 autoLogging: false,
@@ -66,6 +74,8 @@ import { MailModule } from './mail/mail.module';
         UsersModule,
         AuthModule,
         MailModule,
+        ProductsModule,
+        StorageModule,
     ],
     controllers: [],
     providers: [],
