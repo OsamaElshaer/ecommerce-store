@@ -6,8 +6,13 @@ export class StorageService {
     async deleteFile(filePath: string): Promise<void> {
         try {
             await unlink(filePath);
-        } catch {
-            // File may already be deleted
+        } catch (error: any) {
+            if (error.code === 'ENOENT') {
+                return;
+            }
+
+            console.error('Failed to delete file:', filePath, error);
+            throw error;
         }
     }
 }

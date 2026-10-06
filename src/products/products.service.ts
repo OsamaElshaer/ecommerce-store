@@ -1,18 +1,34 @@
+import {
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { join } from 'node:path';
+
 import { Product } from './entities/product.entity';
-import { QueryProductsDto, ProductSort } from './dto/query-products.dto';
-import { Injectable, NotFoundException } from '@nestjs/common';
 import { ProductImage } from './entities/product-image.entity';
+
+import {
+    QueryProductsDto,
+    ProductSort,
+} from './dto/query-products.dto';
+
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class ProductsService {
     constructor(
         @InjectRepository(Product)
         private readonly productsRepository: Repository<Product>,
+
         @InjectRepository(ProductImage)
         private readonly productImagesRepository: Repository<ProductImage>,
+
+        private readonly storageService: StorageService,
     ) {}
 
     async findAll(query: QueryProductsDto) {
@@ -28,7 +44,9 @@ export class ProductsService {
         const qb = this.productsRepository
             .createQueryBuilder('product')
             .leftJoinAndSelect('product.images', 'images')
-            .where('product.is_active = :isActive', { isActive: true });
+            .where('product.is_active = :isActive', {
+                isActive: true,
+            });
 
         if (search) {
             qb.andWhere('product.name ILIKE :search', {
@@ -37,20 +55,26 @@ export class ProductsService {
         }
 
         if (minPrice !== undefined) {
-            qb.andWhere('product.price >= :minPrice', { minPrice });
+            qb.andWhere('product.price >= :minPrice', {
+                minPrice,
+            });
         }
 
         if (maxPrice !== undefined) {
-            qb.andWhere('product.price <= :maxPrice', { maxPrice });
+            qb.andWhere('product.price <= :maxPrice', {
+                maxPrice,
+            });
         }
 
         switch (sort) {
             case ProductSort.PRICE_ASC:
                 qb.orderBy('product.price', 'ASC');
                 break;
+
             case ProductSort.PRICE_DESC:
                 qb.orderBy('product.price', 'DESC');
                 break;
+
             case ProductSort.NEWEST:
             default:
                 qb.orderBy('product.created_at', 'DESC');
@@ -63,14 +87,23 @@ export class ProductsService {
 
         return {
             data,
-            meta: { page, limit, total },
+            meta: {
+                page,
+                limit,
+                total,
+            },
         };
     }
 
     async findOne(id: string): Promise<Product> {
         const product = await this.productsRepository.findOne({
-            where: { id, is_active: true },
-            relations: { images: true },
+            where: {
+                id,
+                is_active: true,
+            },
+            relations: {
+                images: true,
+            },
         });
 
         if (!product) {
@@ -82,23 +115,149 @@ export class ProductsService {
 
     async create(
         dto: CreateProductDto,
-        file: Express.Multer.File,
-    ): Promise<Product> {
+        files: Express.Multer.File[],
+    ): Promise<{
+        message: string;
+        id: string;
+    }> {
+        console.log('========== CREATE PRODUCT ==========');
+        console.log('files count:', files?.length);
+        console.log(
+            'files:',
+            files?.map((file) => file.filename),
+        );
+
         const product = this.productsRepository.create(dto);
 
-        const savedProduct = await this.productsRepository.save(product);
+        const savedProduct =
+            await this.productsRepository.save(product);
 
-        if (file) {
-            const image = this.productImagesRepository.create({
-                product_id: savedProduct.id,
-                image_url: `/uploads/products/${file.filename}`,
-                is_primary: true,
-                position: 0,
-            });
+        if (files?.length) {
+            const images = files.map((file, index) =>
+                this.productImagesRepository.create({
+                    product_id: savedProduct.id,
+                    image_url: `/uploads/products/${file.filename}`,
+                    is_primary: index === 0,
+                    position: index,
+                }),
+            );
 
-            await this.productImagesRepository.save(image);
+            await this.productImagesRepository.save(images);
         }
 
-        return this.findOne(savedProduct.id);
+        return {
+            message: 'Product created successfully',
+            id: savedProduct.id,
+        };
+    }
+
+    async update(
+        id: string,
+        dto: UpdateProductDto,
+    ): Promise<Product> {
+        const product = await this.productsRepository.findOne({
+            where: { id },
+        });
+
+        if (!product) {
+            throw new NotFoundException('Product not found');
+        }
+
+        Object.assign(product, dto);
+
+        await this.productsRepository.save(product);
+
+        return this.findOne(id);
+    }
+
+    async remove(id: string): Promise<void> {
+        const product = await this.productsRepository.findOne({
+            where: { id },
+            relations: {
+                images: true,
+            },
+        });
+
+        if (!product) {
+            throw new NotFoundException('Product not found');
+        }
+
+        for (const image of product.images) {
+            const relativePath = image.image_url.replace(/^\/+/, '');
+
+            const filePath = join(
+                process.cwd(),
+                relativePath,
+            );
+
+            await this.storageService.deleteFile(filePath);
+        }
+
+        await this.productsRepository.delete(id);
+    }
+
+    async removeImage(
+        productId: string,
+        imageId: string,
+    ): Promise<void> {
+        const image =
+            await this.productImagesRepository.findOne({
+                where: {
+                    id: imageId,
+                    product_id: productId,
+                },
+            });
+
+        if (!image) {
+            throw new NotFoundException(
+                'Product image not found',
+            );
+        }
+
+        const relativePath = image.image_url.replace(/^\/+/, '');
+
+        const filePath = join(
+            process.cwd(),
+            relativePath,
+        );
+
+        await this.storageService.deleteFile(filePath);
+
+        await this.productImagesRepository.delete(image.id);
+    }
+
+    async addImages(
+        productId: string,
+        files: Express.Multer.File[],
+    ): Promise<Product> {
+        const product = await this.productsRepository.findOne({
+            where: {
+                id: productId,
+            },
+            relations: {
+                images: true,
+            },
+        });
+
+        if (!product) {
+            throw new NotFoundException('Product not found');
+        }
+
+        const startPosition = product.images.length;
+
+        const images = files.map((file, index) =>
+            this.productImagesRepository.create({
+                product_id: product.id,
+                image_url: `/uploads/products/${file.filename}`,
+                is_primary:
+                    product.images.length === 0 &&
+                    index === 0,
+                position: startPosition + index,
+            }),
+        );
+
+        await this.productImagesRepository.save(images);
+
+        return this.findOne(productId);
     }
 }

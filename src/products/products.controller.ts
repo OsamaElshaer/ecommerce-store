@@ -1,22 +1,38 @@
 import {
-    Body,
     Controller,
     Get,
-    Param,
     Post,
+    Body,
     Query,
-    UploadedFile,
+    Param,
+    UploadedFiles,
     UseInterceptors,
+    UseGuards,
+    Patch,
+    Delete,
 } from '@nestjs/common';
-import { ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiOperation,
+    ApiResponse,
+    ApiTags,
+} from '@nestjs/swagger';
+
 import { ProductsService } from './products.service';
-import { QueryProductsDto } from './dto/query-products.dto';
 import { CreateProductDto } from './dto/create-product.dto';
+import { QueryProductsDto } from './dto/query-products.dto';
+import { UserRole } from '../users/entities/user.entity';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @ApiTags('products')
 @Controller('products')
@@ -33,17 +49,27 @@ export class ProductsController {
         return this.productsService.findAll(query);
     }
 
+
     @Get(':id')
     @ApiOperation({ summary: 'Get product by ID' })
-    @ApiResponse({ status: 200, description: 'Product retrieved successfully' })
-    @ApiResponse({ status: 404, description: 'Product not found' })
+    @ApiResponse({
+        status: 200,
+        description: 'Product retrieved successfully',
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'Product not found',
+    })
     findOne(@Param('id') id: string) {
         return this.productsService.findOne(id);
     }
 
+
     @Post()
-    @ApiOperation({ summary: 'Create a new product' })
-    @ApiResponse({ status: 201, description: 'Product created successfully' })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @ApiOperation({ summary: 'Create a product with images' })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {
@@ -51,49 +77,55 @@ export class ProductsController {
             properties: {
                 name: {
                     type: 'string',
-                    example: 'Lavender Scented Candle',
+                    example: 'iPhone 17 Pro',
                 },
                 description: {
                     type: 'string',
-                    example: 'A calming lavender-scented soy candle, 200g.',
+                    example: 'Latest iPhone model',
                 },
                 price: {
                     type: 'number',
-                    example: 149.99,
+                    example: 999.99,
                 },
                 stock: {
-                    type: 'integer',
-                    example: 50,
+                    type: 'number',
+                    example: 10,
                 },
                 is_active: {
                     type: 'boolean',
                     example: true,
                 },
-                image: {
-                    type: 'string',
-                    format: 'binary',
+                images: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary',
+                    },
                 },
             },
-            required: ['name', 'description', 'price', 'stock', 'image'],
         },
     })
     @UseInterceptors(
-        FileInterceptor('image', {
+        FilesInterceptor('images', 10, {
             storage: diskStorage({
                 destination: './uploads/products',
-                filename: (_req, file, callback) => {
+                filename: (_req, file, cb) => {
                     const extension = extname(file.originalname);
-                    callback(null, `${randomUUID()}${extension}`);
+                    cb(null, `${randomUUID()}${extension}`);
                 },
             }),
             limits: {
                 fileSize: 5 * 1024 * 1024,
             },
-            fileFilter: (_req, file, callback) => {
-                const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            fileFilter: (_req, file, cb) => {
+                const allowedMimeTypes = [
+                    'image/jpeg',
+                    'image/png',
+                    'image/webp',
+                ];
 
-                if (!allowedTypes.includes(file.mimetype)) {
-                    return callback(
+                if (!allowedMimeTypes.includes(file.mimetype)) {
+                    return cb(
                         new Error(
                             'Only JPEG, PNG, and WebP images are allowed',
                         ),
@@ -101,14 +133,147 @@ export class ProductsController {
                     );
                 }
 
-                callback(null, true);
+                cb(null, true);
             },
         }),
     )
     create(
         @Body() dto: CreateProductDto,
-        @UploadedFile() file: Express.Multer.File,
+        @UploadedFiles() files: Express.Multer.File[],
     ) {
-        return this.productsService.create(dto, file);
+        return this.productsService.create(dto, files);
+    }
+
+
+
+    @Patch(':id')
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @ApiOperation({ summary: 'Update a product' })
+    @ApiResponse({
+        status: 200,
+        description: 'Product updated successfully',
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'Product not found',
+    })
+    update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
+        return this.productsService.update(id, dto);
+    }
+
+
+
+
+    @Delete(':id')
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @ApiOperation({ summary: 'Delete a product' })
+    @ApiResponse({
+        status: 200,
+        description: 'Product deleted successfully',
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'Product not found',
+    })
+    remove(@Param('id') id: string): Promise<void> {
+        return this.productsService.remove(id);
+    }
+
+
+
+
+    @Delete(':id/images/:imageId')
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @ApiOperation({ summary: 'Delete a product image' })
+    @ApiResponse({
+        status: 200,
+        description: 'Product image deleted successfully',
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'Product image not found',
+    })
+    removeImage(
+        @Param('id') productId: string,
+        @Param('imageId') imageId: string,
+    ): Promise<void> {
+        return this.productsService.removeImage(productId, imageId);
+    }
+
+
+
+    
+    @Post(':id/images')
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @UseInterceptors(
+        FilesInterceptor('images', 10, {
+            storage: diskStorage({
+                destination: './uploads/products',
+                filename: (_req, file, cb) => {
+                    const extension = extname(file.originalname);
+
+                    cb(null, `${randomUUID()}${extension}`);
+                },
+            }),
+            limits: {
+                fileSize: 5 * 1024 * 1024,
+            },
+            fileFilter: (_req, file, cb) => {
+                const allowedMimeTypes = [
+                    'image/jpeg',
+                    'image/png',
+                    'image/webp',
+                ];
+
+                if (!allowedMimeTypes.includes(file.mimetype)) {
+                    return cb(
+                        new Error(
+                            'Only JPEG, PNG, and WebP images are allowed',
+                        ),
+                        false,
+                    );
+                }
+
+                cb(null, true);
+            },
+        }),
+    )
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                images: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary',
+                    },
+                },
+            },
+        },
+    })
+    @ApiConsumes('multipart/form-data')
+    @ApiOperation({ summary: 'Add images to a product' })
+    @ApiResponse({
+        status: 201,
+        description: 'Product images added successfully',
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'Product not found',
+    })
+    addImages(
+        @Param('id') productId: string,
+        @UploadedFiles() files: Express.Multer.File[],
+    ) {
+        return this.productsService.addImages(productId, files);
     }
 }

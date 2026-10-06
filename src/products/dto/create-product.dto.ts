@@ -6,7 +6,7 @@ import {
     IsOptional,
     IsBoolean,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class CreateProductDto {
     @ApiProperty({ example: 'Lavender Scented Candle' })
@@ -31,6 +31,12 @@ export class CreateProductDto {
 
     @ApiProperty({ example: true, required: false })
     @IsOptional()
+    @Transform(({ value }) => {
+        if (value === 'true') return true;
+        if (value === 'false') return false;
+
+        return value;
+    })
     @IsBoolean()
     is_active?: boolean;
 }
