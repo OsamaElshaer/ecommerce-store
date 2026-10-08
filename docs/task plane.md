@@ -73,11 +73,20 @@ Task-by-task breakdown of every sprint. Check items off as you go. Order within 
 
 **Backend**
 
-- [ ] `Product` entity + migration
-- [ ] `storage` module — Cloudinary/S3 upload service
-- [ ] `GET /products` with pagination, search, filter, sort
-- [ ] `GET /products/:id`
-- [ ] `POST /products`, `PATCH /products/:id`, `DELETE /products/:id` (Admin-guarded)
+# Sprint 2 — Products Module
+
+* [ ] `Product` entity + migration
+* [ ] `ProductImage` entity + migration + relationships
+* [ ] `storage` module — Cloudinary/S3 upload service
+* [ ] Local image storage with Multer
+* [ ] Multiple product image upload
+* [ ] Product image management — add/delete images
+* [ ] `GET /products` with pagination, search, filter, sort
+* [ ] `GET /products/:id`
+* [ ] `POST /products`, `PATCH /products/:id`, `DELETE /products/:id` (Admin-guarded)
+* [ ] Delete physical image files when deleting products/images
+* [ ] Swagger documentation & Bearer authentication
+* [ ] Product DTO validation & error handling
 - [ ] e2e tests for CRUD + search/filter edge cases (empty results, invalid price range)
 
 **Frontend**

@@ -1,7 +1,4 @@
-import {
-    Injectable,
-    NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { join } from 'node:path';
@@ -9,15 +6,13 @@ import { join } from 'node:path';
 import { Product } from './entities/product.entity';
 import { ProductImage } from './entities/product-image.entity';
 
-import {
-    QueryProductsDto,
-    ProductSort,
-} from './dto/query-products.dto';
+import { QueryProductsDto, ProductSort } from './dto/query-products.dto';
 
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
 import { StorageService } from '../storage/storage.service';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class ProductsService {
@@ -29,6 +24,8 @@ export class ProductsService {
         private readonly productImagesRepository: Repository<ProductImage>,
 
         private readonly storageService: StorageService,
+        @InjectPinoLogger(ProductsService.name)
+        private readonly logger: PinoLogger,
     ) {}
 
     async findAll(query: QueryProductsDto) {
@@ -120,17 +117,9 @@ export class ProductsService {
         message: string;
         id: string;
     }> {
-        console.log('========== CREATE PRODUCT ==========');
-        console.log('files count:', files?.length);
-        console.log(
-            'files:',
-            files?.map((file) => file.filename),
-        );
-
         const product = this.productsRepository.create(dto);
 
-        const savedProduct =
-            await this.productsRepository.save(product);
+        const savedProduct = await this.productsRepository.save(product);
 
         if (files?.length) {
             const images = files.map((file, index) =>
@@ -151,10 +140,7 @@ export class ProductsService {
         };
     }
 
-    async update(
-        id: string,
-        dto: UpdateProductDto,
-    ): Promise<Product> {
+    async update(id: string, dto: UpdateProductDto): Promise<Product> {
         const product = await this.productsRepository.findOne({
             where: { id },
         });
@@ -185,10 +171,7 @@ export class ProductsService {
         for (const image of product.images) {
             const relativePath = image.image_url.replace(/^\/+/, '');
 
-            const filePath = join(
-                process.cwd(),
-                relativePath,
-            );
+            const filePath = join(process.cwd(), relativePath);
 
             await this.storageService.deleteFile(filePath);
         }
@@ -196,30 +179,21 @@ export class ProductsService {
         await this.productsRepository.delete(id);
     }
 
-    async removeImage(
-        productId: string,
-        imageId: string,
-    ): Promise<void> {
-        const image =
-            await this.productImagesRepository.findOne({
-                where: {
-                    id: imageId,
-                    product_id: productId,
-                },
-            });
+    async removeImage(productId: string, imageId: string): Promise<void> {
+        const image = await this.productImagesRepository.findOne({
+            where: {
+                id: imageId,
+                product_id: productId,
+            },
+        });
 
         if (!image) {
-            throw new NotFoundException(
-                'Product image not found',
-            );
+            throw new NotFoundException('Product image not found');
         }
 
         const relativePath = image.image_url.replace(/^\/+/, '');
 
-        const filePath = join(
-            process.cwd(),
-            relativePath,
-        );
+        const filePath = join(process.cwd(), relativePath);
 
         await this.storageService.deleteFile(filePath);
 
@@ -249,9 +223,7 @@ export class ProductsService {
             this.productImagesRepository.create({
                 product_id: product.id,
                 image_url: `/uploads/products/${file.filename}`,
-                is_primary:
-                    product.images.length === 0 &&
-                    index === 0,
+                is_primary: product.images.length === 0 && index === 0,
                 position: startPosition + index,
             }),
         );

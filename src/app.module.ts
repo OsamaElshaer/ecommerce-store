@@ -12,6 +12,7 @@ import { ProductsModule } from './products/products.module';
 import { StorageModule } from './storage/storage.module';
 import { join } from 'path/win32';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { CartModule } from './cart/cart.module';
 
 @Module({
     imports: [
@@ -76,6 +77,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
         MailModule,
         ProductsModule,
         StorageModule,
+        CartModule,
     ],
     controllers: [],
     providers: [],

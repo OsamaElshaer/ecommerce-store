@@ -10,8 +10,6 @@ export class StorageService {
             if (error.code === 'ENOENT') {
                 return;
             }
-
-            console.error('Failed to delete file:', filePath, error);
             throw error;
         }
     }
