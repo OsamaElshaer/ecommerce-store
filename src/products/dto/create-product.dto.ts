@@ -5,6 +5,7 @@ import {
     Min,
     IsOptional,
     IsBoolean,
+    IsUUID,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
@@ -39,4 +40,7 @@ export class CreateProductDto {
     })
     @IsBoolean()
     is_active?: boolean;
+
+    @IsUUID()
+    category_id!: string;
 }

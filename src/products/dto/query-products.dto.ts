@@ -6,6 +6,7 @@ import {
     IsOptional,
     IsPositive,
     IsString,
+    IsUUID,
     Min,
 } from 'class-validator';
 
@@ -51,4 +52,8 @@ export class QueryProductsDto {
     @IsOptional()
     @IsEnum(ProductSort)
     sort?: ProductSort;
+
+    @IsOptional()
+    @IsUUID()
+    category_id?: string;
 }

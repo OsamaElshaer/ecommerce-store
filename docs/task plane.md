@@ -50,7 +50,7 @@ Task-by-task breakdown of every sprint. Check items off as you go. Order within 
 - [ ] Structured logging (nestjs-pino) — request logging + manual auth event logs (register/login/refresh/logout)
 - [ ] Dev-only real error messages in global HttpExceptionFilter (safe fallback in production)
 - [ ] Forgot/Reset Password infrastructure — PasswordResetToken entity, MailModule (Gmail SMTP), email template, `forgotPassword()` service logic
-- [ ] `resetPassword()` service logic + `POST /auth/reset-password` endpoint 
+- [ ] `resetPassword()` service logic + `POST /auth/reset-password` endpoint
 - [ ] `POST /auth/forgot-password` endpoint (DTO/service done, endpoint itself not yet added to controller)
 - [ ] Google Strategy (`password_hash` nullable + login() null-check pending, GoogleStrategy class + `/auth/google` + `/auth/google/callback` endpoints not started)
 - [ ] Write e2e tests for register/login (happy path + duplicate email) — paused, test DB strategy undecided
@@ -75,19 +75,20 @@ Task-by-task breakdown of every sprint. Check items off as you go. Order within 
 
 # Sprint 2 — Products Module
 
-* [ ] `Product` entity + migration
-* [ ] `ProductImage` entity + migration + relationships
-* [ ] `storage` module — Cloudinary/S3 upload service
-* [ ] Local image storage with Multer
-* [ ] Multiple product image upload
-* [ ] Product image management — add/delete images
-* [ ] `GET /products` with pagination, search, filter, sort
-* [ ] `GET /products/:id`
-* [ ] `POST /products`, `PATCH /products/:id`, `DELETE /products/:id` (Admin-guarded)
-* [ ] Delete physical image files when deleting products/images
-* [ ] Swagger documentation & Bearer authentication
-* [ ] Product DTO validation & error handling
-- [ ] e2e tests for CRUD + search/filter edge cases (empty results, invalid price range)
+- [ ] `Product` entity + migration
+- [ ] `ProductImage` entity + migration + relationships
+- [ ] `storage` module — Cloudinary/S3 upload service
+- [ ] Local image storage with Multer
+- [ ] Multiple product image upload
+- [ ] Product image management — add/delete images
+- [ ] `GET /products` with pagination, search, filter, sort
+- [ ] `GET /products/:id`
+- [ ] `POST /products`, `PATCH /products/:id`, `DELETE /products/:id` (Admin-guarded)
+- [ ] Delete physical image files when deleting products/images
+- [ ] Swagger documentation & Bearer authentication
+- [ ] Product DTO validation & error handling
+
+* [ ] e2e tests for CRUD + search/filter edge cases (empty results, invalid price range)
 
 **Frontend**
 
@@ -103,9 +104,11 @@ Task-by-task breakdown of every sprint. Check items off as you go. Order within 
 
 ---
 
-## Sprint 3 — Cart Module
+## Sprint 3
 
 **Backend**
+
+**Cart Module**
 
 - [ ] `Cart`, `CartItem` entities + migrations
 - [ ] `GET /cart` (auto-create empty cart if none exists)
@@ -113,6 +116,22 @@ Task-by-task breakdown of every sprint. Check items off as you go. Order within 
 - [ ] `PATCH /cart/items/:itemId`
 - [ ] `DELETE /cart/items/:itemId`
 - [ ] e2e tests: add beyond stock, add same product twice (should increment)
+
+**Category Module**
+
+- [ ] `Category` entity + migration
+- [ ] Connect `Category 1:N Product` and add `category_id`
+- [ ] `CategoriesModule` + Service + Controller
+- [ ] Category DTOs + validation
+- [ ] CRUD: Create / List / Get / Update / Delete
+- [ ] Admin guard for Create / Update / Delete
+- [ ] Prevent duplicate `name` and `slug`
+- [ ] Add `category_id` to Product DTOs
+- [ ] Add category filter to `GET /products`
+- [ ] Swagger documentation
+- [ ] Pino logging
+- [ ] Testing + error handling
+- [ ] Conventional commit
 
 **Frontend**
 
@@ -123,7 +142,6 @@ Task-by-task breakdown of every sprint. Check items off as you go. Order within 
 - [ ] Cart icon/count in Navbar
 
 **Milestone check:** Build a cart, change quantities, see accurate live total.
-
 ---
 
 ## Sprint 4 — Checkout & Payments

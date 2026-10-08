@@ -4,8 +4,11 @@ import {
     Column,
     CreateDateColumn,
     OneToMany,
+    JoinColumn,
+    ManyToOne,
 } from 'typeorm';
 import { ProductImage } from './product-image.entity';
+import { Category } from '../../categories/entities/category.entity';
 
 @Entity('products')
 export class Product {
@@ -26,6 +29,13 @@ export class Product {
 
     @Column({ default: true })
     is_active!: boolean;
+
+    @Column()
+    category_id!: string;
+
+    @ManyToOne(() => Category, (category) => category.products)
+    @JoinColumn({ name: 'category_id' })
+    category!: Category;
 
     @OneToMany(() => ProductImage, (image) => image.product)
     images!: ProductImage[];

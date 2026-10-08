@@ -19,6 +19,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { StorageService } from '../storage/storage.service';
 
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Category } from '../categories/entities/category.entity';
 
 @Injectable()
 export class ProductsService {
@@ -28,6 +29,9 @@ export class ProductsService {
 
         @InjectRepository(ProductImage)
         private readonly productImagesRepository: Repository<ProductImage>,
+
+        @InjectRepository(Category)
+        private readonly categoryRepository: Repository<Category>,
 
         private readonly storageService: StorageService,
 
@@ -45,6 +49,7 @@ export class ProductsService {
             minPrice,
             maxPrice,
             sort,
+            category_id,
         } = query;
 
         const qb = this.productsRepository
@@ -54,6 +59,11 @@ export class ProductsService {
                 isActive: true,
             });
 
+        if (category_id) {
+            qb.andWhere('product.category_id = :category_id', {
+                category_id,
+            });
+        }
         if (search) {
             qb.andWhere('product.name ILIKE :search', {
                 search: `%${search}%`,
@@ -140,6 +150,21 @@ export class ProductsService {
             'Creating product',
         );
 
+        const category = await this.categoryRepository.findOne({
+            where: {
+                id: dto.category_id,
+            },
+        });
+
+        if (!category) {
+            this.logger.warn(
+                { categoryId: dto.category_id },
+                'Category not found',
+            );
+
+            throw new NotFoundException('Category not found');
+        }
+
         const product = this.productsRepository.create(dto);
 
         const savedProduct = await this.productsRepository.save(product);
@@ -160,6 +185,7 @@ export class ProductsService {
         this.logger.info(
             {
                 productId: savedProduct.id,
+                categoryId: savedProduct.category_id,
                 imageCount: files?.length ?? 0,
             },
             'Product created successfully',
@@ -182,6 +208,23 @@ export class ProductsService {
             this.logger.warn({ productId: id }, 'Product not found');
 
             throw new NotFoundException('Product not found');
+        }
+
+        if (dto.category_id) {
+            const category = await this.categoryRepository.findOne({
+                where: {
+                    id: dto.category_id,
+                },
+            });
+
+            if (!category) {
+                this.logger.warn(
+                    { categoryId: dto.category_id },
+                    'Category not found',
+                );
+
+                throw new NotFoundException('Category not found');
+            }
         }
 
         Object.assign(product, dto);

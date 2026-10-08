@@ -49,7 +49,6 @@ export class ProductsController {
         return this.productsService.findAll(query);
     }
 
-
     @Get(':id')
     @ApiOperation({ summary: 'Get product by ID' })
     @ApiResponse({
@@ -63,7 +62,6 @@ export class ProductsController {
     findOne(@Param('id') id: string) {
         return this.productsService.findOne(id);
     }
-
 
     @Post()
     @ApiBearerAuth()
@@ -94,6 +92,11 @@ export class ProductsController {
                 is_active: {
                     type: 'boolean',
                     example: true,
+                },
+                category_id: {
+                    type: 'string',
+                    format: 'uuid',
+                    example: '550e8400-e29b-41d4-a716-446655440000',
                 },
                 images: {
                     type: 'array',
@@ -144,8 +147,6 @@ export class ProductsController {
         return this.productsService.create(dto, files);
     }
 
-
-
     @Patch(':id')
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard, RolesGuard)
@@ -163,9 +164,6 @@ export class ProductsController {
         return this.productsService.update(id, dto);
     }
 
-
-
-
     @Delete(':id')
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard, RolesGuard)
@@ -182,9 +180,6 @@ export class ProductsController {
     remove(@Param('id') id: string): Promise<void> {
         return this.productsService.remove(id);
     }
-
-
-
 
     @Delete(':id/images/:imageId')
     @ApiBearerAuth()
@@ -206,9 +201,6 @@ export class ProductsController {
         return this.productsService.removeImage(productId, imageId);
     }
 
-
-
-    
     @Post(':id/images')
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard, RolesGuard)
