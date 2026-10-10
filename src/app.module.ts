@@ -14,6 +14,7 @@ import { join } from 'path/win32';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
+import { AddressesModule } from './addresses/addresses.module';
 
 @Module({
     imports: [
@@ -80,6 +81,7 @@ import { CategoriesModule } from './categories/categories.module';
         StorageModule,
         CartModule,
         CategoriesModule,
+        AddressesModule,
     ],
     controllers: [],
     providers: [],

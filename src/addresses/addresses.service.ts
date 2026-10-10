@@ -16,6 +16,28 @@ export class AddressesService {
         @InjectPinoLogger(AddressesService.name)
         private readonly logger: PinoLogger,
     ) {}
+    async setDefault(userId: string, addressId: string): Promise<Address> {
+        
+        const address = await this.findOne(userId, addressId);
+
+        await this.addressRepository.update(
+            { user_id: userId, is_default: true },
+            { is_default: false },
+        );
+
+        address.is_default = true;
+
+        const updatedAddress = await this.addressRepository.save(address);
+
+        this.logger.info(
+            { userId, addressId },
+            'Default address updated successfully',
+        );
+
+        return updatedAddress;
+    }
+
+
 
     async create(userId: string, dto: CreateAddressDto): Promise<Address> {
         if (dto.is_default) {

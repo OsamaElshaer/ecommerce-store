@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
     IsNotEmpty,
     IsString,
@@ -7,12 +8,24 @@ import {
 } from 'class-validator';
 
 export class CreateCategoryDto {
+    @ApiProperty({
+        description: 'Category name',
+        example: 'Mobile Phones',
+        minLength: 2,
+        maxLength: 100,
+    })
     @IsString()
     @IsNotEmpty()
     @MinLength(2)
     @MaxLength(100)
     name!: string;
 
+    @ApiProperty({
+        description: 'URL-friendly unique category slug',
+        example: 'mobile-phones',
+        minLength: 2,
+        maxLength: 100,
+    })
     @IsString()
     @IsNotEmpty()
     @MinLength(2)

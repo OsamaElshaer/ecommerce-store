@@ -52,7 +52,7 @@ export class QueryProductsDto {
     @IsOptional()
     @IsEnum(ProductSort)
     sort?: ProductSort;
-
+    @ApiPropertyOptional({ example: 'uuid-of-category' })
     @IsOptional()
     @IsUUID()
     category_id?: string;

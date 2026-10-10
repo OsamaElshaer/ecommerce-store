@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import {
     ApiBearerAuth,
     ApiCreatedResponse,
+    ApiNoContentResponse,
     ApiOkResponse,
     ApiTags,
 } from '@nestjs/swagger';
@@ -12,6 +13,7 @@ import { AddressesService } from './addresses.service';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { Address } from './entities/address.entity';
 import { AddressResponseDto } from './dto/AddressResponseDto';
+import { UpdateAddressDto } from './dto/UpdateAddressDto';
 
 @ApiTags('Addresses')
 @ApiBearerAuth()
@@ -36,5 +38,28 @@ export class AddressesController {
     @ApiOkResponse({ type: AddressResponseDto, isArray: true })
     findAll(@Req() req: any) {
         return this.addressesService.findAll(req.user.id);
+    }
+
+    @Patch(':id')
+    @ApiOkResponse({ type: AddressResponseDto })
+    update(
+        @Req() req: any,
+        @Param('id') addressId: string,
+        @Body() dto: UpdateAddressDto,
+    ) {
+        return this.addressesService.update(req.user.id, addressId, dto);
+    }
+
+    @Delete(':id')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @ApiNoContentResponse({ description: 'Address deleted successfully' })
+    remove(@Req() req: any, @Param('id') addressId: string) {
+        return this.addressesService.remove(req.user.id, addressId);
+    }
+
+    @Patch(':id/default')
+    @ApiOkResponse({ type: AddressResponseDto })
+    setDefault(@Req() req: any, @Param('id') addressId: string) {
+        return this.addressesService.setDefault(req.user.id, addressId);
     }
 }

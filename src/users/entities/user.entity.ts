@@ -3,7 +3,9 @@ import {
     PrimaryGeneratedColumn,
     Column,
     CreateDateColumn,
+    OneToMany,
 } from 'typeorm';
+import { Address } from '../../addresses/entities/address.entity';
 
 export enum UserRole {
     CUSTOMER = 'customer',
@@ -23,7 +25,7 @@ export class User {
 
     @Column({ type: 'varchar', length: 255, nullable: true })
     password_hash!: string | null;
-    
+
     @Column()
     full_name!: string;
 
@@ -34,6 +36,9 @@ export class User {
     })
     role!: UserRole;
 
+    @OneToMany(() => Address, (address) => address.user)
+    addresses!: Address[];
+    
     @Column({
         type: 'enum',
         enum: AuthProvider,
