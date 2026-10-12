@@ -15,6 +15,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
 import { AddressesModule } from './addresses/addresses.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
     imports: [
@@ -82,6 +83,7 @@ import { AddressesModule } from './addresses/addresses.module';
         CartModule,
         CategoriesModule,
         AddressesModule,
+        OrdersModule,
     ],
     controllers: [],
     providers: [],

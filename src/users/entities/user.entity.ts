@@ -6,6 +6,7 @@ import {
     OneToMany,
 } from 'typeorm';
 import { Address } from '../../addresses/entities/address.entity';
+import { Order } from '../../orders/entities/order.entity';
 
 export enum UserRole {
     CUSTOMER = 'customer',
@@ -38,7 +39,10 @@ export class User {
 
     @OneToMany(() => Address, (address) => address.user)
     addresses!: Address[];
-    
+
+    @OneToMany(() => Order, (order) => order.user)
+    orders!: Order[];
+
     @Column({
         type: 'enum',
         enum: AuthProvider,
