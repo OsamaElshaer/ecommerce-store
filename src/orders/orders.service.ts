@@ -206,21 +206,24 @@ export class OrdersService {
 
     // Returns a Map of productId -> primary image url (one query).
     // Uses DISTINCT ON, which is PostgreSQL-specific.
+    // src/orders/orders.service.ts
     private async getPrimaryImages(
         manager: EntityManager,
         productIds: string[],
     ): Promise<Map<string, string>> {
+        if (productIds.length === 0) {
+            return new Map();
+        }
+
         const rows = await manager
             .createQueryBuilder()
-            .select(
-                'DISTINCT ON (image.product_id) image.product_id',
-                'product_id',
-            )
+            .select('image.product_id', 'product_id')
             .addSelect('image.image_url', 'image_url')
             .from('product_images', 'image')
             .where('image.product_id IN (:...productIds)', {
                 productIds,
             })
+            .distinctOn(['image.product_id'])
             .orderBy('image.product_id', 'ASC')
             .addOrderBy('image.is_primary', 'DESC')
             .addOrderBy('image.position', 'ASC')
@@ -229,7 +232,6 @@ export class OrdersService {
 
         return new Map(rows.map((row) => [row.product_id, row.image_url]));
     }
-
     // Check and decrement stock in a single statement.
     private async decrementStock(
         manager: EntityManager,

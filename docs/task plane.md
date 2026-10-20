@@ -1,238 +1,253 @@
-# Task / Sprint Plan — Detailed
+# Task / Sprint Plan — E-commerce Store
+**Backend:** NestJS + TypeORM + PostgreSQL  
+**Frontend:** Ne t.js + TypeScript
 
-## E-commerce Store — Nest.js (Backend) + Next.js (Frontend)
-
-Task-by-task breakdown of every sprint. Check items off as you go. Order within each sprint is suggested — backend task before its matching frontend task, so you always have something to test against.
+**Legend:**  
+- [ ] Implemented / reviewed based on the code shared
+- [ ] Pending implementation, verification, or testing
 
 ---
 
 ## Sprint 0 — Setup
 
-**Backend**
+### Backend
+- [ ] Configure TypeORM and PostgreSQL connection
+- [ ] Configure `@nestjs/config` and environment variables
+- [ ] Configure structured logging with Pino (`nestjs-pino`)
+- [ ] Verify startup environment validation and fail-fast behavior
+- [ ] Verify global `ValidationPipe` and `HttpE ceptionFilter`
+- [ ] Verify Swagger at `/api/docs`
+- [ ] Verify `GET /health`
+- [ ] Final setup verification and cleanup
 
-- [ ] `nest new backend`, clean up default files
-- [ ] Install & configure TypeORM/Prisma, connect to PostgreSQL
-- [ ] Create `.env` and `.env.example` (from the Environment Variables doc)
-- [ ] Set up `@nestjs/config` with startup validation (fail fast if a required var is missing)
-- [ ] Set up global `ValidationPipe`, `HttpExceptionFilter`
-- [ ] Set up Swagger at `/api/docs`
-- [ ] Setup structured logging with Pino (`nestjs-pino`) for HTTP and application logs
-- [ ] Create a `GET /health` route, confirm it responds
+### Frontend
+- [ ] Create Ne t.js app with App Router, TypeScript, and Tailwind
+- [ ] Configure `.env.local`
+- [ ] Install React Query, Zustand, React Hook Form, and Zod
+- [ ] Set up `lib/api/client.ts`
+- [ ] Configure root `layout.ts ` and React Query provider
 
-**Frontend**
-
-- [ ] `create-next-app frontend` (App Router, TypeScript, Tailwind)
-- [ ] Set up `.env.local` (`NEXT_PUBLIC_API_URL`, etc.)
-- [ ] Install React Query, Zustand, React Hook Form, Zod
-- [ ] Set up `lib/api/client.ts` (base fetch/axios wrapper)
-- [ ] Set up root `layout.tsx` with React Query provider
-
-**Both**
-
-- [ ] Confirm frontend can call `GET /health` on the backend successfully
-- [ ] Git repo initialized, first commit pushed
+### Both
+- [ ] Verify frontend can call `GET /health`
+- [ ] Confirm Git repository and initial project commits
 
 ---
 
 ## Sprint 1 — Authentication
 
-**Backend**
-
-- [ ] Create `User` entity + migration
-- [ ] `auth` module: `register`, `login` endpoints
+### Backend
+- [ ] `User` entity and migration
+- [ ] Register and login endpoints
 - [ ] Password hashing with bcrypt
-- [ ] JWT access + refresh token issuing
-- [ ] `JwtStrategy`, `AuthGuard`
-- [ ] `RolesGuard` + `@Roles()` decorator
-- [ ] `POST /auth/refresh`, `POST /auth/logout`
-- [ ] Refresh token rotation (with reuse detection + selector-based lookup)
-- [ ] Refresh token cleanup cron job (@nestjs/schedule, deletes expired rows daily)
-- [ ] Structured logging (nestjs-pino) — request logging + manual auth event logs (register/login/refresh/logout)
-- [ ] Dev-only real error messages in global HttpExceptionFilter (safe fallback in production)
-- [ ] Forgot/Reset Password infrastructure — PasswordResetToken entity, MailModule (Gmail SMTP), email template, `forgotPassword()` service logic
-- [ ] `resetPassword()` service logic + `POST /auth/reset-password` endpoint
-- [ ] `POST /auth/forgot-password` endpoint (DTO/service done, endpoint itself not yet added to controller)
-- [ ] Google Strategy (`password_hash` nullable + login() null-check pending, GoogleStrategy class + `/auth/google` + `/auth/google/callback` endpoints not started)
-- [ ] Write e2e tests for register/login (happy path + duplicate email) — paused, test DB strategy undecided
+- [ ] JWT access and refresh token issuing
+- [ ] `JwtStrategy` and `JwtAuthGuard`
+- [ ] `RolesGuard` and `@Roles()` decorator
+- [ ] `POST /auth/refresh` and `POST /auth/logout`
+- [ ] Refresh token rotation and selector-based lookup
+- [ ] Refresh token cleanup cron job
+- [ ] Structured request and authentication event logging
+- [ ] Password reset token infrastructure
+- [ ] Mail service integration with Resend
+- [ ] Reset-password service logic
+- [ ] Verify `POST /auth/forgot-password` endpoint is registered in the controller
+- [ ] Complete Google OAuth strategy and endpoints
+- [ ] Review password-hash null handling for OAuth users
+- [ ] Add e2e tests for register/login and duplicate email
+- [ ] Decide on test database strategy
 
-**Frontend**
-
-- [ ] `authStore` (Zustand) — user, accessToken, setAuth/clearAuth
-- [ ] `/register` page + form (React Hook Form + Zod)
-- [ ] `/login` page + form
-- [ ] `lib/api/auth.api.ts` — register, login, refresh, logout calls
+### Frontend
+- [ ] `authStore` using Zustand
+- [ ] `/register` page and form
+- [ ] `/login` page and form
+- [ ] `lib/api/auth.api.ts`
 - [ ] Silent refresh on app load
-- [ ] `middleware.ts` — redirect unauthenticated users away from customer/admin routes
-- [ ] Navbar shows login/register vs account menu based on auth state
+- [ ] Authentication-aware route protection
+- [ ] Navbar authentication state
 
-**Milestone check:** Register → login → hit a protected test route → get blocked when logged out.
+### Milestone
+- [ ] Register → login → access protected route → verify unauthenticated requests are rejected
 
 ---
 
 ## Sprint 2 — Products Module
 
-**Backend**
-
-# Sprint 2 — Products Module
-
-- [ ] `Product` entity + migration
-- [ ] `ProductImage` entity + migration + relationships
-- [ ] `storage` module — Cloudinary/S3 upload service
-- [ ] Local image storage with Multer
+### Backend
+- [ ] `Product` entity and migration
+- [ ] `ProductImage` entity and migration/relationships
+- [ ] Local image uploads using Multer
 - [ ] Multiple product image upload
 - [ ] Product image management — add/delete images
-- [ ] `GET /products` with pagination, search, filter, sort
+- [ ] `GET /products` with pagination, search, filtering, and sorting
 - [ ] `GET /products/:id`
-- [ ] `POST /products`, `PATCH /products/:id`, `DELETE /products/:id` (Admin-guarded)
-- [ ] Delete physical image files when deleting products/images
-- [ ] Swagger documentation & Bearer authentication
-- [ ] Product DTO validation & error handling
+- [ ] Product create, update, and delete endpoints
+- [ ] Admin guards for product mutations
+- [ ] Product DTO validation and error handling
+- [ ] Swagger documentation and Bearer authentication
+- [ ] Verify physical image files are deleted when products/images are deleted
+- [ ] Add e2e tests for CRUD, search, filtering, and sorting
+- [ ] Test edge cases: empty results and invalid price ranges
+- [ ] Review image storage abstraction for future Cloudinary/S3 support
 
-* [ ] e2e tests for CRUD + search/filter edge cases (empty results, invalid price range)
-
-**Frontend**
-
+### Frontend
 - [ ] `lib/api/products.api.ts`
-- [ ] `useProducts(filters)` hook (React Query)
-- [ ] `ProductCard`, `ProductFilters` components
+- [ ] `useProducts(filters)` hook
+- [ ] `ProductCard` and `ProductFilters`
 - [ ] `/products` listing page
 - [ ] `/products/[id]` details page
-- [ ] Admin: `ProductForm` component
-- [ ] Admin: `/admin/products` (table), `/admin/products/new`, `/admin/products/[id]/edit`
+- [ ] Admin `ProductForm`
+- [ ] Admin product listing, creation, and editing pages
 
-**Milestone check:** Admin adds a product with an image → shows correctly on storefront → search/filter work.
+### Milestone
+- [ ] Admin creates a product with images → storefront displays it → search and filters work
 
 ---
 
-## Sprint 3
+## Sprint 3 — Cart and Category Modules
 
-**Backend**
-
-**Cart Module**
-
-- [ ] `Cart`, `CartItem` entities + migrations
-- [ ] `GET /cart` (auto-create empty cart if none exists)
-- [ ] `POST /cart/items` (with stock validation)
+### Backend — Cart
+- [ ] `Cart` entity and migration
+- [ ] `CartItem` entity and migration
+- [ ] One cart per user constraint
+- [ ] Unique `(cart_id, product_id)` constraint
+- [ ] `GET /cart` with empty-cart creation
+- [ ] `POST /cart/items` with stock validation
 - [ ] `PATCH /cart/items/:itemId`
 - [ ] `DELETE /cart/items/:itemId`
-- [ ] e2e tests: add beyond stock, add same product twice (should increment)
+- [ ] Transactions and pessimistic cart locking for cart mutations
+- [ ] Pino logging for cart operations
+- [ ] Verify concurrent cart creation is handled correctly
+- [ ] Verify database constraints match the migrations
+- [ ] Test adding the same product twice
+- [ ] Test quantity greater than stock
+- [ ] Test updating and deleting another user's cart item
+- [ ] Test concurrent cart modifications
 
-**Category Module**
-
-- [ ] `Category` entity + migration
+### Backend — Category
+- [ ] `Category` entity and migration
 - [ ] Connect `Category 1:N Product` and add `category_id`
-- [ ] `CategoriesModule` + Service + Controller
-- [ ] Category DTOs + validation
-- [ ] CRUD: Create / List / Get / Update / Delete
-- [ ] Admin guard for Create / Update / Delete
-- [ ] Prevent duplicate `name` and `slug`
-- [ ] Add `category_id` to Product DTOs
+- [ ] `CategoriesModule`, service, and controller
+- [ ] Category DTOs and validation
+- [ ] CRUD endpoints
+- [ ] Admin guards for create/update/delete
+- [ ] Prevent duplicate category names and slugs
 - [ ] Add category filter to `GET /products`
 - [ ] Swagger documentation
 - [ ] Pino logging
-- [ ] Testing + error handling
+- [ ] Tests and error handling
 - [ ] Conventional commit
 
-**Frontend**
-
+### Frontend
 - [ ] `lib/api/cart.api.ts`
-- [ ] `useCart()`, `useAddToCart()`, `useUpdateCartItem()`, `useRemoveCartItem()` hooks
-- [ ] "Add to Cart" button on `ProductCard` and Product Details
-- [ ] `/cart` page — `CartItem`, `CartSummary`
+- [ ] `useCart()`, `useAddToCart()`, `useUpdateCartItem()`, `useRemoveCartItem()`
+- [ ] Add-to-cart buttons on product cards and details
+- [ ] `/cart` page with `CartItem` and `CartSummary`
 - [ ] Cart icon/count in Navbar
 
-**Milestone check:** Build a cart, change quantities, see accurate live total.
----
-
-## Sprint 4 — Checkout & Payments
-
-_(Highest-risk sprint — consider splitting into 4a: Addresses + Order creation, and 4b: Payment integration)_
-
-**Backend — 4a**
-
-- [ ] `Address` entity + migration
-- [ ] `GET/POST/PATCH/DELETE /addresses`
-- [ ] `Order`, `OrderItem` entities + migrations
-- [ ] `POST /checkout` — creates Order + OrderItems from cart (status `pending`), validates stock again at this point
-
-**Backend — 4b**
-
-- [ ] `Payment` entity + migration
-- [ ] Integrate chosen gateway SDK (Stripe or Paymob), test mode keys
-- [ ] `payments` module — create payment intent inside `POST /checkout`
-- [ ] `POST /payments/webhook` — verify signature, update `Payment`/`Order` status, decrement stock on success
-- [ ] `GET /orders/:id/payment-status`
-- [ ] e2e test: full checkout flow with a test-mode payment
-
-**Frontend — 4a**
-
-- [ ] `AddressForm`, `AddressList` components
-- [ ] `/checkout` page — address step
-
-**Frontend — 4b**
-
-- [ ] `PaymentForm` component (Stripe.js/Paymob elements)
-- [ ] Wire checkout submission → payment confirmation
-- [ ] `/orders/[id]` confirmation view, polling `payment-status` until resolved
-
-**Milestone check:** Full test-mode purchase works end-to-end: cart → address → pay → webhook confirms → order created → confirmation shown.
+### Milestone
+- [ ] Add products to cart, update quantities, remove items, and verify totals
 
 ---
 
-## Sprint 5 — Order Management
+## Sprint 4 — Addresses, Checkout, and Orders
 
-**Backend**
+### Backend — Addresses
+- [ ] `Address` entity and migration
+- [ ] Verify address CRUD endpoints
+- [ ] Validate address ownership during checkout
+- [ ] Test address ownership and deletion behavior
 
-- [ ] `GET /orders` (customer — own orders only)
-- [ ] `GET /orders/:id` (customer: own only / admin: any)
-- [ ] `GET /orders` admin variant with `status` filter + pagination
-- [ ] `PATCH /orders/:id/status` (Admin) with valid-transition checks
-- [ ] e2e tests: customer can't access another user's order, invalid status transition rejected
+### Backend — Order Creation
+- [ ] `Order` entity and migration
+- [ ] `OrderItem` entity and migration
+- [ ] `POST /orders/checkout`
+- [ ] Build order items from the user's cart
+- [ ] Store product name, image, and unit-price snapshots
+- [ ] Store shipping-address snapshots
+- [ ] Revalidate product availability and stock during checkout
+- [ ] Lock cart and products inside a database transaction
+- [ ] Decrement stock atomically during checkout
+- [ ] Clear cart items after successful order creation
+- [ ] Roll back database changes if checkout fails
+- [ ] Test empty-cart checkout
+- [ ] Test insufficient stock and inactive products
+- [ ] Test concurrent checkouts for the last available item
 
-**Frontend**
+### Backend — Order Management
+- [ ] `GET /orders` — current user's orders with pagination
+- [ ] `GET /orders/:id` — current user's order only
+- [ ] `PATCH /orders/:id/cancel`
+- [ ] Cancellation restricted to pending orders
+- [ ] Restore stock when a pending order is cancelled
+- [ ] Admin order listing with status filtering and pagination
+- [ ] `PATCH /orders/:id/status` with admin authorization
+- [ ] Validate allowed order-status transitions
+- [ ] Pino logging for checkout and order operations
+- [ ] Verify `OrdersModule` registers the correct controller class
+- [ ] Verify `RolesGuard` is available in `OrdersModule`
+- [ ] Test that customers cannot access other users' orders
+- [ ] Test admin-only endpoints
+- [ ] Test cancellation and stock restoration
+- [ ] Test invalid status transitions
+- [ ] Review behavior when a referenced product has been deleted
+- [ ] Add e2e tests for checkout, cancellation, and order management
 
+### Payments — Not Implemented Yet
+- [ ] Decide between Paymob and Stripe
+- [ ] Create `Payment` entity and migration
+- [ ] Integrate payment gateway in test mode
+- [ ] Add payment intent/session creation
+- [ ] Add webhook signature verification
+- [ ] Define payment and order status synchronization
+- [ ] Decide whether stock is reserved at checkout or only after payment
+- [ ] Add payment-status endpoint
+- [ ] Test successful, failed, and cancelled payments
+
+**Important:** The current implementation creates a pending order and deducts stock immediately. Payment integration will need to preserve or deliberately change this behavior.
+
+### Frontend
+- [ ] Address form and address list
+- [ ] Checkout page and address selection
 - [ ] `lib/api/orders.api.ts`
-- [ ] `useOrders()`, `useOrder(id)` hooks
-- [ ] `/orders` — `OrderCard` list
-- [ ] `/orders/[id]` — `OrderStatusBadge`, `OrderItemsList`
-- [ ] Admin: `/admin/orders` — `DataTable` + status filter
-- [ ] Admin: `/admin/orders/[id]` — `StatusSelect` to update status
+- [ ] `useOrders()` and `useOrder(id)` hooks
+- [ ] Orders list and details pages
+- [ ] Order confirmation page
+- [ ] Payment form and payment-status flow after gateway integration
 
-**Milestone check:** Customer sees order status update (on refresh) as admin changes it.
+### Milestone
+- [ ] Customer completes checkout → order is created → stock and cart update correctly → order can be viewed and cancelled according to its status
 
 ---
 
-## Sprint 6 — Admin Dashboard
+## Sprint 5 — Admin Dashboard
 
-**Backend**
+### Backend
+- [ ] Create admin statistics endpoint: `GET /admin/stats`
+- [ ] Aggregate total orders, sales, products, and orders by status
+- [ ] Apply admin authorization
+- [ ] Test aggregate results against database records
 
-- [ ] `admin` module — `GET /admin/stats` (aggregation query: total orders, total sales, total products, orders by status)
-
-**Frontend**
-
-- [ ] `lib/api` call for admin stats
+### Frontend
+- [ ] Admin statistics API call
 - [ ] `StatsCard` component
 - [ ] `/admin` dashboard page
 
-**Milestone check:** Dashboard shows accurate live counts.
+### Milestone
+- [ ] Admin dashboard displays accurate statistics
 
 ---
 
-## Sprint 7 — Testing & Polish
+## Sprint 6 — Testing and Polish
 
-- [ ] e2e tests: full auth flow, full product CRUD, full checkout-to-delivery flow
-- [ ] Edge cases: empty-cart checkout, concurrent stock depletion (two users buying the last item)
-- [ ] Responsive pass on all customer-facing pages (mobile/tablet/desktop)
-- [ ] Loading states (`Skeleton`/`Spinner`) and error states across every data-fetching page
-- [ ] Cross-check API doc vs actual Swagger output, fix drift
-- [ ] Basic deployment: backend + frontend + DB to a staging environment
-- [ ] Smoke test the deployed staging environment end-to-end
+- [ ] e2e tests for authentication
+- [ ] e2e tests for product CRUD
+- [ ] e2e tests for cart and category modules
+- [ ] e2e tests for checkout, cancellation, and order status
+- [ ] Test concurrent stock depletion
+- [ ] Test authorization and validation edge cases
+- [ ] Review API responses and error handling
+- [ ] Verify Swagger matches actual endpoints
+- [ ] Responsive testing on mobile, tablet, and desktop
+- [ ] Add loading, empty, and error states in the frontend
+- [ ] Deploy backend, frontend, and database to staging
+- [ ] Run end-to-end smoke tests in staging
 
-**Milestone check:** Someone unfamiliar with the project can register and buy something on staging without hitting a dead end.
-
----
-
-## Notes
-
-- Check off items as you go — this doubles as a progress tracker, not just a plan.
-- If a sprint is taking noticeably longer than the others, that's a signal to split it further (like Sprint 4 already is) rather than pushing through — small checkable tasks keep momentum better than one big vague sprint.

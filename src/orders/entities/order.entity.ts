@@ -11,6 +11,7 @@ import {
 
 import { User } from '../../users/entities/user.entity';
 import { Address } from '../../addresses/entities/address.entity';
+import { Payment } from '../../payments/entities/payment.entity';
 import { OrderItem } from './order-item.entity';
 import { OrderStatus } from '../enums/order-status.enum';
 
@@ -75,6 +76,9 @@ export class Order {
 
     @OneToMany(() => OrderItem, (item) => item.order)
     items!: OrderItem[];
+
+    @OneToMany(() => Payment, (payment) => payment.order)
+    payments!: Payment[];
 
     @CreateDateColumn()
     created_at!: Date;

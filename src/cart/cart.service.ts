@@ -46,7 +46,7 @@ export class CartService {
     }
 
     /**
-     * Creates a cart if one doesn't exist.
+     * (Creates a cart if one doesn't exist).
      * A UNIQUE constraint on carts.user_id is required.
      */
     private async getOrCreateCart(
