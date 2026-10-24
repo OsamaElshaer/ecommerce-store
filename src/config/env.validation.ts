@@ -25,4 +25,37 @@ export const envValidationSchema = Joi.object({
     MAIL_PASSWORD: Joi.string().required(),
 
     FRONTEND_URL: Joi.string().required(),
+
+    PAYMENT_PROVIDER: Joi.string().valid('paymob').required(),
+
+    PAYMOB_SECRET_KEY: Joi.string().when('PAYMENT_PROVIDER', {
+        is: 'paymob',
+        then: Joi.required(),
+        otherwise: Joi.optional(),
+    }),
+    PAYMOB_PUBLIC_KEY: Joi.string().when('PAYMENT_PROVIDER', {
+        is: 'paymob',
+        then: Joi.required(),
+        otherwise: Joi.optional(),
+    }),
+    PAYMOB_HMAC_SECRET: Joi.string().when('PAYMENT_PROVIDER', {
+        is: 'paymob',
+        then: Joi.required(),
+        otherwise: Joi.optional(),
+    }),
+    PAYMOB_INTEGRATION_ID: Joi.number().when('PAYMENT_PROVIDER', {
+        is: 'paymob',
+        then: Joi.required(),
+        otherwise: Joi.optional(),
+    }),
+    PAYMOB_BASE_URL: Joi.string().uri().when('PAYMENT_PROVIDER', {
+        is: 'paymob',
+        then: Joi.required(),
+        otherwise: Joi.optional(),
+    }),
+    API_PUBLIC_URL: Joi.string().uri().when('PAYMENT_PROVIDER', {
+        is: 'paymob',
+        then: Joi.required(),
+        otherwise: Joi.optional(),
+    }),
 });

@@ -18,6 +18,10 @@ import { PaymentStatus } from '../enums/payment-status.enum';
     ['order_id', 'idempotency_key'],
     { unique: true },
 )
+@Index('UQ_payments_one_active_per_order', ['order_id'], {
+    unique: true,
+    where: `"status" IN ('pending', 'succeeded')`,
+})
 export class Payment {
     @PrimaryGeneratedColumn('uuid')
     id!: string;

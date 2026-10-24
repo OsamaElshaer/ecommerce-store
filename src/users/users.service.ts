@@ -22,7 +22,12 @@ export class UsersService {
     findById(id: string): Promise<User | null> {
         return this.usersRepository.findOne({ where: { id } });
     }
-    async update(userId: string, data: Partial<User>) {
+    async update(
+        userId: string,
+        data: Partial<
+            Pick<User, 'email' | 'full_name' | 'password_hash' | 'is_verified'>
+        >,
+    ) {
         return this.usersRepository.update({ id: userId }, data);
     }
 }

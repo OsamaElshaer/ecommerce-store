@@ -3,7 +3,6 @@ import {
     Body,
     Controller,
     Headers,
-    Param,
     Post,
     Req,
     UseGuards,
@@ -14,7 +13,6 @@ import {
     ApiBearerAuth,
     ApiHeader,
     ApiOperation,
-    ApiParam,
     ApiTags,
 } from '@nestjs/swagger';
 
@@ -30,13 +28,8 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 export class PaymentsController {
     constructor(private readonly paymentsService: PaymentsService) {}
 
-    @Post(':providerName')
+    @Post()
     @ApiOperation({ summary: 'Create a payment' })
-    @ApiParam({
-        name: 'providerName',
-        enum: ['paymob', 'stripe'],
-        example: 'paymob',
-    })
     @ApiHeader({
         name: 'Idempotency-Key',
         description:
@@ -49,7 +42,6 @@ export class PaymentsController {
     })
     createPayment(
         @Req() req: any,
-        @Param('providerName') providerName: string,
         @Headers('idempotency-key') idempotencyKey: string | undefined,
         @Body() dto: CreatePaymentDto,
     ) {
@@ -59,7 +51,6 @@ export class PaymentsController {
 
         return this.paymentsService.createPayment(
             req.user.id,
-            providerName,
             dto.orderId,
             idempotencyKey.trim(),
         );
