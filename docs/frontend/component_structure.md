@@ -58,7 +58,7 @@ Generic components with no business logic — used across almost every page.
 ### Checkout (`components/checkout/`)
 - **`AddressForm`** — add/edit address. Reused on Checkout and Account > Addresses.
 - **`AddressList`** — pick a saved address. Used on Checkout.
-- **`PaymentForm`** — wraps Stripe.js/Paymob elements.
+- **`PaymentForm`** — wraps Paymob elements.
 
 ### Orders (`components/orders/`)
 - **`OrderCard`** — summary row in order history.

@@ -73,7 +73,7 @@ An e-commerce store selling products from a **single category**. Customers can b
 ### 4.4 Checkout & Payments
 
 - Enter / select shipping address
-- Payment via a real gateway (Stripe or Paymob) in Test Mode
+- Payment via a real gateway (Paymob) in Test Mode
 - Order confirmation after successful payment
 - Handling failed payment cases
 
@@ -108,7 +108,7 @@ An e-commerce store selling products from a **single category**. Customers can b
 | Database     | PostgreSQL (or MySQL)                     |
 | ORM          | TypeORM or Prisma                         |
 | Auth         | JWT + Refresh Tokens                      |
-| Payment      | Stripe / Paymob (Test Mode)               |
+| Payment      | Paymob (Test Mode)               |
 | File Storage | Cloudinary or AWS S3 (for product images) |
 | API Docs     | Swagger (built into Nest.js)              |
 

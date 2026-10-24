@@ -150,16 +150,16 @@ Initiates checkout from the current cart.
 ```json
 {
     "order_id": "order-uuid",
-    "payment": { "client_secret": "...", "provider": "stripe" }
+    "payment": { "client_secret": "...", "provider": "Paymob" }
 }
 ```
 
-- **Effect:** creates `Order` (status `pending`) + `OrderItem`s from current cart, creates a `Payment` record, returns whatever the gateway (Stripe/Paymob) needs to complete payment client-side
+- **Effect:** creates `Order` (status `pending`) + `OrderItem`s from current cart, creates a `Payment` record, returns whatever the gateway (Paymob) needs to complete payment client-side
 - **Errors:** `400` cart is empty, `400` insufficient stock on one or more items
 
 ### `POST /payments/webhook` — Public (gateway-signed)
 
-Receives payment confirmation from Stripe/Paymob.
+Receives payment confirmation from Paymob.
 
 - **Effect:** updates `Payment.status` and `Order.status` based on gateway result; decrements product stock on success
 - **Errors:** `400` invalid signature

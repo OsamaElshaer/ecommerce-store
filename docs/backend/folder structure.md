@@ -97,7 +97,6 @@ backend/
 │   │   ├── payments.controller.ts
 │   │   ├── payments.service.ts
 │   │   ├── providers/
-│   │   │   ├── stripe.provider.ts
 │   │   │   └── paymob.provider.ts
 │   │   └── entities/
 │   │       └── payment.entity.ts
@@ -147,6 +146,6 @@ backend/
 
 - **One module per domain** (auth, products, cart, orders, payments...) mirrors the modules in the Architecture doc — makes it easy to trace a feature from PRD → User Story → API endpoint → actual code.
 - **`common/`** holds cross-cutting concerns (guards, decorators) so `AuthGuard`/`RolesGuard` aren't reimplemented per module.
-- **`payments/providers/`** isolates the Stripe/Paymob-specific code behind a shared interface, so swapping or adding a gateway later doesn't touch the rest of the Payments module.
+- **`payments/providers/`** isolates the Paymob-specific code behind a shared interface, so swapping or adding a gateway later doesn't touch the rest of the Payments module.
 - **`storage/` and `mail/`** are separate infrastructure modules (not tied to one feature) since both Products (images) and Orders (confirmation emails) depend on them.
 - **DTOs are per-action, not shared**, so validation rules for "create" vs "update" don't conflict (e.g. all fields required on create, all optional on update).

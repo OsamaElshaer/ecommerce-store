@@ -192,7 +192,7 @@
 - [ ] Add e2e tests for checkout, cancellation, and order management
 
 ### Payments — Not Implemented Yet
-- [ ] Decide between Paymob and Stripe
+- [ ] Decide between Paymob 
 - [ ] Create `Payment` entity and migration
 - [ ] Integrate payment gateway in test mode
 - [ ] Add payment intent/session creation

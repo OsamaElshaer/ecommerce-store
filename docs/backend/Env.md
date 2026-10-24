@@ -41,16 +41,16 @@ This file documents every environment variable the backend needs. Keep an actual
 
 ---
 
-## 4. Payment Gateway (Stripe or Paymob — Test Mode)
+## 4. Payment Gateway ( Paymob — Test Mode)
 
 Pick the set matching whichever gateway you go with.
 
-### Stripe
+###  paymob
 
 | Variable                | Description                          | Example       |
 | ----------------------- | ------------------------------------ | ------------- |
-| `STRIPE_SECRET_KEY`     | Server-side secret key (test mode)   | `sk_test_...` |
-| `STRIPE_WEBHOOK_SECRET` | Verifies incoming webhook signatures | `whsec_...`   |
+| ` paymob_SECRET_KEY`     | Server-side secret key (test mode)   | `sk_test_...` |
+| ` paymob_WEBHOOK_SECRET` | Verifies incoming webhook signatures | `whsec_...`   |
 
 ### Paymob
 
@@ -118,9 +118,9 @@ JWT_ACCESS_EXPIRES_IN=15m
 JWT_REFRESH_SECRET=
 JWT_REFRESH_EXPIRES_IN=7d
 
-# Payment Gateway (Stripe example)
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
+# Payment Gateway ( paymob example)
+ paymob_SECRET_KEY=
+ paymob_WEBHOOK_SECRET=
 
 # File Storage (Cloudinary example)
 CLOUDINARY_CLOUD_NAME=
