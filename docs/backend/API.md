@@ -140,36 +140,55 @@ Update quantity of a specific cart item.
 
 ## 5. Checkout & Payment
 
-### `POST /checkout`
+Payment is a separate step after checkout. The flow is:
+`POST /orders/checkout` → `POST /payments` → customer pays on the gateway page → webhook confirms → `GET /orders/:id/payment-status`.
 
-Initiates checkout from the current cart.
+### `POST /orders/checkout` — Customer
+
+Creates an order from the current cart.
 
 - **Body:** `{ address_id }`
-- **Response 200:**
+- **Effect:** creates `Order` (status `pending`) + `OrderItem`s from the cart, and reserves stock immediately
+- **Errors:** `400` cart is empty, `400` insufficient stock on one or more items
+
+### `POST /payments` — Customer (own order only)
+
+Starts a payment for a pending order and returns the gateway checkout URL.
+
+- **Headers:** `Idempotency-Key: <unique string>` (required, one per payment attempt)
+- **Body:** `{ order_id }`
+- **Response 201:**
 
 ```json
 {
-    "order_id": "order-uuid",
-    "payment": { "client_secret": "...", "provider": "Paymob" }
+    "providerRef": "123456",
+    "clientData": {
+        "checkoutUrl": "https://eg.checkout.paymob.com/?publicKey=...&clientSecret=...",
+        "clientSecret": "..."
+    }
 }
 ```
 
-- **Effect:** creates `Order` (status `pending`) + `OrderItem`s from current cart, creates a `Payment` record, returns whatever the gateway (Paymob) needs to complete payment client-side
-- **Errors:** `400` cart is empty, `400` insufficient stock on one or more items
+- **Effect:** creates a `Payment` (status `pending`) and a Paymob payment intention. The frontend redirects the customer to `clientData.checkoutUrl`.
+- **Idempotency:** the same `Idempotency-Key` for the same order returns the same result and never creates a second payment. An order can have only one active (`pending` or `succeeded`) payment at a time.
+- **Errors:** `400` missing `Idempotency-Key`, `404` order not found, `409` order is not pending / already paid / key already used, `502` gateway error
 
 ### `POST /payments/webhook` — Public (gateway-signed)
 
-Receives payment confirmation from Paymob.
+Called by Paymob (server to server). This is the source of truth for the payment result.
 
-- **Effect:** updates `Payment.status` and `Order.status` based on gateway result; decrements product stock on success
+- **Security:** the `hmac` query parameter is verified with HMAC-SHA512 using `PAYMOB_HMAC_SECRET`. Amount and currency are checked against the stored payment.
+- **Effect on success:** `Payment.status` → `succeeded` and `Order.status` → `confirmed`
+- **Effect on failure:** only logged. The payment stays `pending` because the customer can retry on the same checkout page.
+- **Response 200:** `{ received: true }` (repeated webhooks are safe and ignored)
 - **Errors:** `400` invalid signature
 
 ### `GET /orders/:id/payment-status` — Customer (own order only)
 
+Used by the frontend (polling) after the customer returns from the gateway.
+
 - **Response 200:** `{ status: "pending" | "succeeded" | "failed" }`
-
----
-
+- **Errors:** `404` order not found or has no payments
 ## 6. Orders
 
 ### `GET /orders` — Customer
@@ -246,3 +265,5 @@ All error responses follow this shape:
 | `/orders` (admin view + status update) | AdminGuard                      |
 | `/admin/*`                             | AdminGuard                      |
 | `/payments/webhook`                    | Public + signature verification |
+| `/payments`                            | AuthGuard (customer)            |
+| `/orders/:id/payment-status`           | AuthGuard (customer)            |

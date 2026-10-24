@@ -41,26 +41,27 @@ This file documents every environment variable the backend needs. Keep an actual
 
 ---
 
-## 4. Payment Gateway ( Paymob — Test Mode)
+## 4. Payment Gateway (Paymob — Test Mode)
 
-Pick the set matching whichever gateway you go with.
+| Variable                | Description                                                                 | Example                      |
+| ----------------------- | --------------------------------------------------------------------------- | ---------------------------- |
+| `PAYMENT_PROVIDER`      | Active gateway. Only `paymob` is supported for now                          | `paymob`                     |
+| `PAYMOB_SECRET_KEY`     | Server-side secret key (never expose it)                                    | `********`                   |
+| `PAYMOB_PUBLIC_KEY`     | Public key used to build the checkout URL                                   | `egy_pk_test_...`            |
+| `PAYMOB_HMAC_SECRET`    | Verifies webhook signatures (Dashboard → Developers → API Keys)             | `********`                   |
+| `PAYMOB_INTEGRATION_ID` | Numeric ID of the payment integration (digits only, no quotes)              | `123456`                     |
+| `PAYMOB_BASE_URL`       | Paymob API base URL                                                         | `https://accept.paymob.com`  |
+| `API_PUBLIC_URL`        | Public URL of this API, used for the webhook (`notification_url`)           | `https://api.example.com`    |
 
-###  paymob
+The `PAYMOB_*` variables are required only when `PAYMENT_PROVIDER=paymob`.
 
-| Variable                | Description                          | Example       |
-| ----------------------- | ------------------------------------ | ------------- |
-| ` paymob_SECRET_KEY`     | Server-side secret key (test mode)   | `sk_test_...` |
-| ` paymob_WEBHOOK_SECRET` | Verifies incoming webhook signatures | `whsec_...`   |
+**Local development:** Paymob must reach your webhook, so `API_PUBLIC_URL` has to be a public tunnel URL (for example a Cloudflare quick tunnel). The URL changes on every run. After updating it, recreate the container so it reads the new value:
 
-### Paymob
+```bash
+docker compose -f docker-compose-dev.yml up -d --force-recreate app
+```
 
-| Variable                | Description                            | Example    |
-| ----------------------- | -------------------------------------- | ---------- |
-| `PAYMOB_API_KEY`        | Server-side API key (test mode)        | `********` |
-| `PAYMOB_INTEGRATION_ID` | Payment integration ID                 | `********` |
-| `PAYMOB_HMAC_SECRET`    | Verifies webhook callback authenticity | `********` |
-
----
+> Never commit real keys. Real values live in `.env.dev` (gitignored); `.env.example` has names only.
 
 ## 5. File Storage (Product Images)
 
@@ -118,9 +119,15 @@ JWT_ACCESS_EXPIRES_IN=15m
 JWT_REFRESH_SECRET=
 JWT_REFRESH_EXPIRES_IN=7d
 
-# Payment Gateway ( paymob example)
- paymob_SECRET_KEY=
- paymob_WEBHOOK_SECRET=
+# Payment Gateway
+PAYMENT_PROVIDER=paymob
+PAYMOB_SECRET_KEY=
+PAYMOB_PUBLIC_KEY=
+PAYMOB_HMAC_SECRET=
+PAYMOB_INTEGRATION_ID=
+PAYMOB_BASE_URL=https://accept.paymob.com
+API_PUBLIC_URL=
+
 
 # File Storage (Cloudinary example)
 CLOUDINARY_CLOUD_NAME=
