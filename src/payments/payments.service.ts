@@ -282,7 +282,35 @@ export class PaymentsService {
             }
         });
     }
+    async getPaymentStatus(
+        userId: string,
+        orderId: string,
+    ): Promise<{ status: PaymentStatus }> {
+        const order = await this.orderRepository.findOne({
+            where: { id: orderId, user_id: userId },
+        });
 
+        if (!order) {
+            throw new NotFoundException('Order not found');
+        }
+
+        const payments = await this.paymentRepository.find({
+            where: { order_id: order.id },
+            order: { created_at: 'DESC' },
+        });
+
+        if (payments.length === 0) {
+            throw new NotFoundException('No payment found for this order');
+        }
+
+        // At most one payment per order can be pending or succeeded, so if
+        // there is none, every attempt failed and the latest one decides.
+        const active = payments.find(
+            (payment) => payment.status !== PaymentStatus.FAILED,
+        );
+
+        return { status: (active ?? payments[0]).status };
+    }
     private isUniqueViolation(error: unknown): boolean {
         return (
             error instanceof QueryFailedError &&

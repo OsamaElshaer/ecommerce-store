@@ -9,10 +9,15 @@ import { PaymobProvider } from './gateways/paymob.gateway';
 import { Payment } from './entities/payment.entity';
 import { Order } from '../orders/entities/order.entity';
 import { PaymentsWebhookController } from './payments-webhook.controller';
+import { OrderPaymentStatusController } from './order-payment-status.controller';
 
 @Module({
     imports: [TypeOrmModule.forFeature([Payment, Order])],
-    controllers: [PaymentsController, PaymentsWebhookController],
+    controllers: [
+        PaymentsController,
+        PaymentsWebhookController,
+        OrderPaymentStatusController,
+    ],
     providers: [
         PaymobProvider,
         PaymentsService,
