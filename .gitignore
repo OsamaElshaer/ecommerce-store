@@ -1,8 +1,8 @@
-# Nestjs specific
-/dist
-/node_modules
-/build
-/tmp
+# Dependencies & build output
+node_modules/
+dist/
+build/
+tmp/
 
 # Logs
 logs
@@ -15,11 +15,20 @@ lerna-debug.log*
 
 # dotenv environment variable files
 .env
-.env.dev
-.env.prod
-.env.test
+.env.*
+!.env.example
+
 # temp directory
 .temp
 .tmp
 
-/uploads
+# Uploads (backend)
+uploads/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Claude Code personal settings
+.claude/settings.local.json

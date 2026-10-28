@@ -10,7 +10,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { MailModule } from './mail/mail.module';
 import { ProductsModule } from './products/products.module';
 import { StorageModule } from './storage/storage.module';
-import { join } from 'path/win32';
+import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
@@ -69,6 +69,9 @@ import { PaymentsModule } from './payments/payments.module';
                 username: config.get<string>('POSTGRES_USER'),
                 password: config.get<string>('POSTGRES_PASSWORD'),
                 database: config.get<string>('POSTGRES_DB'),
+                ssl: config.get<boolean>('POSTGRES_SSL')
+                    ? { rejectUnauthorized: true }
+                    : false,
                 entities: [__dirname + '/**/*.entity{.ts,.js}'],
                 synchronize: config.get<string>('NODE_ENV') === 'development',
             }),
